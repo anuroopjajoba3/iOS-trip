@@ -1,7 +1,9 @@
 import { router } from "expo-router";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
+  AccessibilityInfo,
   Animated,
+  Easing,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -48,6 +50,46 @@ const slabFillOff = {
 
 export type SlabTone = keyof typeof slabFill;
 
+const settleEase = Easing.bezier(0.22, 1, 0.36, 1);
+
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    AccessibilityInfo.isReduceMotionEnabled().then((value) => {
+      if (alive) setReduced(value);
+    });
+    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduced);
+    return () => {
+      alive = false;
+      subscription.remove();
+    };
+  }, []);
+  return reduced;
+}
+
+function useSettle(duration: number, delay: number) {
+  const reduced = useReducedMotion();
+  const progress = useRef(new Animated.Value(reduced ? 1 : 0)).current;
+
+  useEffect(() => {
+    if (reduced) {
+      progress.setValue(1);
+      return;
+    }
+    progress.setValue(0);
+    Animated.timing(progress, {
+      toValue: 1,
+      duration,
+      delay,
+      easing: settleEase,
+      useNativeDriver: false,
+    }).start();
+  }, [delay, duration, progress, reduced]);
+
+  return progress;
+}
+
 export function Screen({
   header,
   pinned,
@@ -60,7 +102,16 @@ export function Screen({
   footer?: ReactNode;
 }) {
   const insets = useSafeAreaInsets();
+  const page = useSettle(520, 0);
+  const pageStyle = {
+    opacity: page,
+    transform: [
+      { translateY: page.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) },
+      { scale: page.interpolate({ inputRange: [0, 1], outputRange: [0.992, 1] }) },
+    ],
+  };
   return (
+    <Animated.View style={[styles.screen, pageStyle]}>
     <KeyboardAvoidingView
       style={styles.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -84,6 +135,7 @@ export function Screen({
         <View style={{ height: Math.max(insets.bottom, 12) }} />
       )}
     </KeyboardAvoidingView>
+    </Animated.View>
   );
 }
 
@@ -93,7 +145,7 @@ export function BackButton() {
       accessibilityRole="button"
       accessibilityLabel="Back"
       onPress={() => router.back()}
-      style={styles.iconButton}
+      style={({ pressed }) => [styles.iconButton, pressed && styles.iconPressed]}
     >
       <Text style={styles.backMark}>‹</Text>
     </Pressable>
@@ -234,33 +286,39 @@ export function WalletStack({
 }
 
 function SettlingCard({ index, children }: { index: number; children: ReactNode }) {
-  const rise = useRef(new Animated.Value(16)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(rise, {
-        toValue: 0,
-        duration: 280,
-        delay: index * 50,
-        useNativeDriver: false,
-      }),
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 220,
-        delay: index * 50,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  }, [index, opacity, rise]);
-
+  const progress = useSettle(650, 150 + index * 60);
   return (
     <Animated.View
       style={{
         marginTop: index === 0 ? 0 : -18,
         zIndex: index + 1,
-        opacity,
-        transform: [{ translateY: rise }],
+        opacity: progress,
+        transform: [
+          { perspective: 900 },
+          { translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) },
+          { rotateX: progress.interpolate({ inputRange: [0, 1], outputRange: ["8deg", "0deg"] }) },
+          { scale: progress.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) },
+        ],
+      }}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+export function CardArrive({ children }: { children: ReactNode }) {
+  return <SettlingCard index={0}>{children}</SettlingCard>;
+}
+
+export function RowEnter({ index, children }: { index: number; children: ReactNode }) {
+  const progress = useSettle(480, index * 60);
+  return (
+    <Animated.View
+      style={{
+        opacity: progress,
+        transform: [
+          { translateX: progress.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) },
+        ],
       }}
     >
       {children}
@@ -337,7 +395,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   pressed: {
-    opacity: 0.82,
+    transform: [{ scale: 0.985 }],
+  },
+  iconPressed: {
+    transform: [{ scale: 0.96 }],
   },
   buttonText: {
     fontSize: 16,

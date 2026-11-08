@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { formatDollars, masked, spentCents, type Trip } from "@/ledger";
-import { colors, Header, Muted, PrimaryButton, SampleLine, Screen, Title } from "@/components/ui";
+import { colors, Header, Muted, PrimaryButton, RowEnter, SampleLine, Screen, Title } from "@/components/ui";
 import { useTrip } from "@/store";
 import { TripStack } from "@/screens/trips";
 
@@ -48,8 +48,9 @@ export function TripHome({ trip }: { trip: Trip }) {
         Budget {formatDollars(trip.budgetCents)} · Spent {formatDollars(spentCents(trip))}
       </Text>
       <Text style={styles.section}>Charges</Text>
-      {trip.charges.map((charge) => (
-        <View key={charge.id} style={styles.charge}>
+      {trip.charges.map((charge, index) => (
+        <RowEnter key={charge.id} index={index}>
+        <View style={styles.charge}>
           <View style={styles.chargeTop}>
             <Text style={styles.merchant}>{charge.merchant}</Text>
             <Text style={styles.amount}>{formatDollars(charge.amountCents)}</Text>
@@ -63,6 +64,7 @@ export function TripHome({ trip }: { trip: Trip }) {
             </Text>
           ))}
         </View>
+        </RowEnter>
       ))}
       <SampleLine />
     </Screen>

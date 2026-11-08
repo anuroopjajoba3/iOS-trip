@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
 import { formatDollars, masked, type Draft, type Trip } from "@/ledger";
-import { authCopy, colors, Header, SampleLine, Screen, Slab, Title, PrimaryButton } from "@/components/ui";
+import { authCopy, CardArrive, colors, Header, SampleLine, Screen, Slab, Title, PrimaryButton } from "@/components/ui";
 
 export function ChargeCardScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
   return (
@@ -18,15 +18,17 @@ export function ChargeCardScreen({ trip, draft }: { trip: Trip; draft: Draft }) 
         <PrimaryButton label="Charge" onPress={() => router.push("/result")} testID="charge" />
       }
     >
-      <Slab
-        tone="paysplit"
-        label="PaySplit"
-        title={masked(trip.paySplit.last4)}
-        detail={`exp ${trip.paySplit.exp}`}
-        amount={formatDollars(draft.cartCents)}
-        status="Charge"
-        active={trip.paySplit.active}
-      />
+      <CardArrive>
+        <Slab
+          tone="paysplit"
+          label="PaySplit"
+          title={masked(trip.paySplit.last4)}
+          detail={`exp ${trip.paySplit.exp}`}
+          amount={formatDollars(draft.cartCents)}
+          status="Charge"
+          active={trip.paySplit.active}
+        />
+      </CardArrive>
       <Text style={styles.copy}>{authCopy}</Text>
       <SampleLine />
     </Screen>

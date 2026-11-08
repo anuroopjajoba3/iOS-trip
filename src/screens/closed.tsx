@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
 import { formatDollars, masked, type Trip } from "@/ledger";
-import { colors, Muted, PrimaryButton, SampleLine, Screen, Title } from "@/components/ui";
+import { colors, Muted, PrimaryButton, RowEnter, SampleLine, Screen, Title } from "@/components/ui";
 import { TripStack } from "@/screens/trips";
 
 export function ClosedScreen({ trip }: { trip: Trip }) {
@@ -21,8 +21,9 @@ export function ClosedScreen({ trip }: { trip: Trip }) {
       <TripStack trip={trip} />
       <Text style={styles.note}>The cards are inactive. This card cannot be charged again.</Text>
       <Text style={styles.section}>Charges</Text>
-      {trip.charges.map((charge) => (
-        <View key={charge.id} style={styles.charge}>
+      {trip.charges.map((charge, index) => (
+        <RowEnter key={charge.id} index={index}>
+        <View style={styles.charge}>
           <View style={styles.chargeTop}>
             <Text style={styles.name}>{charge.merchant}</Text>
             <Text style={styles.name}>{formatDollars(charge.amountCents)}</Text>
@@ -33,6 +34,7 @@ export function ClosedScreen({ trip }: { trip: Trip }) {
             </Text>
           ))}
         </View>
+        </RowEnter>
       ))}
       <SampleLine />
     </Screen>

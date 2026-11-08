@@ -14,6 +14,7 @@ import {
 import {
   authCopy,
   colors,
+  CardArrive,
   Header,
   PrimaryButton,
   Screen,
@@ -69,14 +70,16 @@ export function ResultScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
     >
       {waiting ? (
         <View testID="waiting">
-          <Slab
-            tone="paysplit"
-            label="PaySplit"
-            title={masked(trip.paySplit.last4)}
-            detail={draft.merchant}
-            amount={formatDollars(draft.cartCents)}
-            status="Fronting"
-          />
+          <CardArrive>
+            <Slab
+              tone="paysplit"
+              label="PaySplit"
+              title={masked(trip.paySplit.last4)}
+              detail={draft.merchant}
+              amount={formatDollars(draft.cartCents)}
+              status="Fronting"
+            />
+          </CardArrive>
           <Text style={styles.copy}>{waitingCopy}</Text>
         </View>
       ) : null}
@@ -98,15 +101,17 @@ export function ResultScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
       ) : null}
       {declined && outcome && !outcome.ok && outcome.reason !== "inactive" ? (
         <View testID="declined">
-          <Slab
-            tone="paysplit"
-            label="PaySplit"
-            title={masked(trip.paySplit.last4)}
-            detail={draft.merchant}
-            amount="Nothing collected"
-            status="Declined"
-            active={false}
-          />
+          <CardArrive>
+            <Slab
+              tone="paysplit"
+              label="PaySplit"
+              title={masked(trip.paySplit.last4)}
+              detail={draft.merchant}
+              amount="Nothing collected"
+              status="Declined"
+              active={false}
+            />
+          </CardArrive>
           <Text style={styles.copy}>{declineCopy(outcome.reason)}</Text>
           <Text style={styles.copy}>Nothing was collected.</Text>
         </View>
