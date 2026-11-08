@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { makeRegisteredCard, parseCents, parseLast4, type CardKind } from "@/ledger";
-import { colors, Field, Muted, PrimaryButton, Screen, Title } from "@/components/ui";
+import { colors, Field, KindToggle, Muted, PrimaryButton, Screen, Title } from "@/components/ui";
 import { useTrip } from "@/store";
 
 export function RegisterCardScreen() {
@@ -41,35 +41,19 @@ export function RegisterCardScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Register trip card</Title>
-          <Muted>This is the card trips charge. Credit or debit. You register it once, right after you sign up.</Muted>
+          <Muted>This is your card under every trip card. Friends add theirs too. Spend splits equally, so you never front the whole trip.</Muted>
         </View>
       }
       footer={<PrimaryButton label="Save card" testID="save-card" onPress={save} />}
     >
       <Text style={styles.label}>Type</Text>
-      <View style={styles.kinds}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Debit"
-          onPress={() => setKind("debit")}
-          style={[styles.kind, kind === "debit" && styles.kindOn]}
-        >
-          <Text style={[styles.kindText, kind === "debit" && styles.kindTextOn]}>Debit</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Credit"
-          onPress={() => setKind("credit")}
-          style={[styles.kind, kind === "credit" && styles.kindOn]}
-        >
-          <Text style={[styles.kindText, kind === "credit" && styles.kindTextOn]}>Credit</Text>
-        </Pressable>
-      </View>
+      <KindToggle kind={kind} onChange={setKind} />
       <Field
         label="Last four"
         value={last4}
         onChangeText={setLast4}
         keyboardType="number-pad"
+        testID="card-last4"
       />
       <Field
         label="Limit"
@@ -77,6 +61,7 @@ export function RegisterCardScreen() {
         onChangeText={setLimit}
         keyboardType="decimal-pad"
         money
+        testID="card-limit"
       />
       {message ? <Text style={styles.message}>{message}</Text> : null}
     </Screen>
@@ -105,29 +90,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontSize: 14,
     color: colors.gray,
-  },
-  kinds: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  kind: {
-    flex: 1,
-    minHeight: 52,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.field,
-  },
-  kindOn: {
-    backgroundColor: colors.trip,
-  },
-  kindText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.white,
-  },
-  kindTextOn: {
-    color: colors.ink,
   },
   message: {
     marginTop: 14,

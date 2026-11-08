@@ -31,14 +31,15 @@ export function SignUpScreen() {
       }
       footer={<PrimaryButton label="Create account" testID="create-account" onPress={submit} />}
     >
-      <Field label="Name" value={name} onChangeText={setName} />
+      <Field label="Name" value={name} onChangeText={setName} testID="signup-name" />
       <Field
         label="Email"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        testID="signup-email"
       />
-      <Field label="Password" value={password} onChangeText={setPassword} secure />
+      <Field label="Password" value={password} onChangeText={setPassword} secure testID="signup-password" />
       {message ? <Text style={styles.message}>{message}</Text> : null}
     </Screen>
   );

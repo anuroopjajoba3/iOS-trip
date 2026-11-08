@@ -1,17 +1,16 @@
 # Trip wallet
 
-Sign up. Start your own trip. Name the trip card. Bring friends.
+Sign up. Register your card. Start a trip. Put up to five people's cards under one trip card.
 
-Merchants charge that one trip card for the full amount. Two funding cards sit behind it. Two caps must sum to the cart, or the whole cart is declined.
+Merchants charge that one trip card for the full amount. Under it, every person's credit or debit card is charged an equal share. Nobody fronts the trip and waits to be paid back. If anyone cannot cover their share, the whole cart is declined.
 
 ## Use
 
 1. Sign up or log in.
-2. Start a trip: name, dates, city, trip card name, and your Visa and Mastercard.
-3. Invite people and share.
-4. Add photos, receipts, and a map of the city.
-5. Pay a merchant. Split caps evenly, or type them. Apple Pay is the confirm step on the trip card.
-6. Close the trip when it is over.
+2. Register your trip card right away: credit or debit, last four, limit.
+3. Start a trip: a name, then friends with the **+**. Each friend brings their own card.
+4. Pay a merchant. The trip card takes the full amount, then every card under it pays an equal share.
+5. Close the trip when it is over.
 
 Live bank rails and a real Apple Pay merchant ID are not connected yet. The trip still records the charge on the phone.
 

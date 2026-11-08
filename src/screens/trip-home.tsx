@@ -2,7 +2,7 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { formatDollars, leftCents, masked, type Trip } from "@/ledger";
+import { cardLabel, formatDollars, leftCents, masked, type Trip } from "@/ledger";
 import { colors, Header, HeroMoney, PrimaryButton, RowEnter, Screen, Title } from "@/components/ui";
 import { FaceRow, PhotoStrip, PlaceMap, SpentChart } from "@/components/trip-extras";
 import { useTrip } from "@/store";
@@ -73,6 +73,18 @@ export function TripHome({ trip }: { trip: Trip }) {
       }
     >
       <TripStack trip={trip} />
+      <Text style={styles.section}>Under this card</Text>
+      {trip.people.map((person) => (
+        <View key={person.id} style={styles.person}>
+          <View style={styles.personTop}>
+            <Text style={styles.personName}>{person.name}</Text>
+            <Text style={styles.personLeft}>{formatDollars(person.card.remainingCents)}</Text>
+          </View>
+          <Text style={styles.metaLine}>
+            {cardLabel(person.card.kind)} {masked(person.card.last4)}
+          </Text>
+        </View>
+      ))}
       <FaceRow people={trip.people} onPress={() => router.push("/share")} />
       <SpentChart trip={trip} />
       <Text style={styles.section}>Charges</Text>
@@ -87,7 +99,7 @@ export function TripHome({ trip }: { trip: Trip }) {
               {formatDollars(charge.amountCents)} charged on {trip.card.name} {masked(trip.card.last4)}
             </Text>
             {charge.collections.map((line) => (
-              <Text key={line.cardId} style={styles.metaLine}>
+              <Text key={line.personId} style={styles.metaLine}>
                 {line.name} {masked(line.last4)} {formatDollars(line.amountCents)}
               </Text>
             ))}
@@ -137,6 +149,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 16,
     color: colors.gray,
+  },
+  person: {
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.line,
+  },
+  personTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  personName: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.white,
+  },
+  personLeft: {
+    fontSize: 16,
+    color: colors.white,
   },
   charge: {
     paddingVertical: 12,

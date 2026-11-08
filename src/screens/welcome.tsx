@@ -9,14 +9,14 @@ export function WelcomeScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Trip Wallet</Title>
-          <Muted>Sign up, then register your trip card.</Muted>
+          <Muted>Sign up, register your card, then put friends' cards under one trip card.</Muted>
         </View>
       }
       footer={
         <PrimaryButton label="Sign up" testID="sign-up" onPress={() => router.push("/signup")} />
       }
     >
-      <Text style={styles.body}>The trip card is the credit or debit card you register after you sign up. Friends sit on that one card.</Text>
+      <Text style={styles.body}>Shops charge one trip card. Under it, up to five people each keep their own credit or debit card. Every spend splits equally, so nobody pays for the group and waits to be paid back.</Text>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Log in"

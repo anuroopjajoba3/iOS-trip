@@ -19,7 +19,7 @@ export function ClosedScreen({ trip }: { trip: Trip }) {
       }
     >
       <TripStack trip={trip} />
-      <Text style={styles.note}>The cards are inactive. This card cannot be charged again.</Text>
+      <Text style={styles.note}>The trip card and every person's card are inactive. Nothing can be charged again.</Text>
       <Text style={styles.section}>Charges</Text>
       {trip.charges.map((charge, index) => (
         <RowEnter key={charge.id} index={index}>
@@ -29,7 +29,7 @@ export function ClosedScreen({ trip }: { trip: Trip }) {
             <Text style={styles.name}>{formatDollars(charge.amountCents)}</Text>
           </View>
           {charge.collections.map((line) => (
-            <Text key={line.cardId} style={styles.meta}>
+            <Text key={line.personId} style={styles.meta}>
               {line.name} {masked(line.last4)} {formatDollars(line.amountCents)}
             </Text>
           ))}

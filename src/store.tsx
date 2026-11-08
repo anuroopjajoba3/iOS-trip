@@ -4,27 +4,58 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 
 import {
   closeTrip,
+  makeRegisteredCard,
   startTrip,
   type Draft,
+  type Person,
   type RegisteredCard,
   type Trip,
+  type TripFriend,
 } from "@/ledger";
 
-function asTrip(value: Trip | null): Trip | null {
-  if (!value) return null;
-  const legacy = value as Trip & { paySplit?: { last4: string; exp: string; active: boolean } };
-  const card = value.card ?? (legacy.paySplit ? { name: "Debit", kind: "debit" as const, ...legacy.paySplit } : undefined);
-  if (!card) return value;
+function asPerson(
+  person: { id: string; name: string; card?: RegisteredCard },
+  fallback?: RegisteredCard,
+): Person {
+  if (person.card?.last4) {
+    return { id: person.id, name: person.name, card: person.card };
+  }
   return {
-    ...value,
-    card: { ...card, kind: card.kind ?? "debit" },
-    place: value.place ?? value.name,
-    people: value.people ?? [],
-    photos: value.photos ?? [],
+    id: person.id,
+    name: person.name,
+    card: fallback ?? makeRegisteredCard("debit", "0000", 0),
   };
 }
 
-const storageKey = "trip-wallet-accounts-v2";
+function asTrip(value: Trip | null): Trip | null {
+  if (!value) return null;
+  const legacy = value as Trip & {
+    paySplit?: { last4: string; exp: string; active: boolean };
+    funding?: Array<{ name: string; last4: string; remainingCents: number; capCents?: number }>;
+  };
+  const card = value.card ?? (legacy.paySplit ? { name: "Trip card", kind: "debit" as const, ...legacy.paySplit } : undefined);
+  if (!card) return value;
+  const people = (value.people ?? []).map((person, index) => {
+    const fromFunding = legacy.funding?.[index];
+    const fallback = fromFunding
+      ? makeRegisteredCard("debit", fromFunding.last4, fromFunding.capCents ?? fromFunding.remainingCents)
+      : undefined;
+    return asPerson(person, fallback);
+  });
+  return {
+    ...value,
+    card: { ...card, name: card.name || "Trip card", kind: card.kind ?? "debit" },
+    place: value.place ?? value.name,
+    people,
+    photos: value.photos ?? [],
+    charges: (value.charges ?? []).map((charge) => ({
+      ...charge,
+      collections: charge.collections ?? [],
+    })),
+  };
+}
+
+const storageKey = "trip-wallet-accounts-v3";
 
 export type User = {
   name: string;
@@ -53,7 +84,7 @@ type TripStore = {
   notice: string | null;
   beginCharge: () => void;
   saveCaps: (draft: Draft) => void;
-  start: (name: string, friends: string[]) => boolean;
+  start: (name: string, friends: TripFriend[]) => boolean;
   close: () => void;
   commit: (trip: Trip) => void;
   signUp: (name: string, email: string, password: string) => Promise<string | null>;
@@ -148,7 +179,11 @@ export function TripProvider({ children }: { children: ReactNode }) {
           setNotice("Register a trip card first.");
           return false;
         }
-        const result = startTrip(trip, { name, friends }, account.card);
+        const result = startTrip(
+          trip,
+          { name, ownerName: account.name, friends },
+          account.card,
+        );
         if (!result.ok) {
           setNotice("Starting another trip is declined until this one is closed.");
           return false;

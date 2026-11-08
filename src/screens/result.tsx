@@ -61,7 +61,7 @@ export function ResultScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
           />
         ) : (
           <PrimaryButton
-            label="Adjust caps"
+            label="Change amount"
             testID="result-action"
             onPress={() => router.dismissTo("/caps")}
           />
@@ -77,7 +77,7 @@ export function ResultScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
               title={masked(trip.card.last4)}
               detail={draft.merchant}
               amount={formatDollars(draft.cartCents)}
-              status="Fronting"
+              status="Splitting"
             />
           </CardArrive>
           <Text style={styles.copy}>{waitingCopy}</Text>
@@ -89,8 +89,8 @@ export function ResultScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
           <Text style={styles.amount}>{formatDollars(draft.cartCents)} charged</Text>
           <Text style={styles.copy}>{authCopy}</Text>
           <Text style={styles.section}>Collections</Text>
-          {outcome.collections.map((line) => (
-            <View key={line.cardId} style={styles.collection}>
+            {outcome.collections.map((line) => (
+            <View key={line.personId} style={styles.collection}>
               <Text style={styles.collectionName}>
                 {line.name} {masked(line.last4)}
               </Text>

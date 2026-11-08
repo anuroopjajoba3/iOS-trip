@@ -44,7 +44,7 @@ export function TripsScreen() {
     >
       {!trip ? (
         <View>
-          <Text style={styles.body}>Start a trip when you are ready. Nothing is preloaded.</Text>
+          <Text style={styles.body}>Start a trip, add friends with their cards, and spend splits equally.</Text>
         </View>
       ) : (
         <View>
@@ -58,7 +58,7 @@ export function TripsScreen() {
               tone="trip"
               label={trip.card.name}
               title={trip.name}
-              detail={`${trip.people.length} friend${trip.people.length === 1 ? "" : "s"}`}
+              detail={`${trip.people.length} card${trip.people.length === 1 ? "" : "s"} under it`}
               amount={`${formatDollars(leftCents(trip))} left`}
               status={open ? "Active" : "Inactive"}
               active={open}
