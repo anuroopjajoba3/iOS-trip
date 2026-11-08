@@ -1,0 +1,227 @@
+/**
+ * One PaySplit card takes the merchant authorization for the full cart.
+ * Two funding caps must sum to that cart in exact cents, or the cart is declined.
+ * A cap larger than what is left on that card declines the cart too.
+ * Nothing here charges a bank, an issuer, or a real card.
+ */
+
+export type FundingCard = {
+  id: "visa" | "mastercard";
+  name: string;
+  last4: string;
+  capCents: number;
+  remainingCents: number;
+  active: boolean;
+};
+
+export type Collection = {
+  cardId: FundingCard["id"];
+  name: string;
+  last4: string;
+  amountCents: number;
+};
+
+export type Charge = {
+  id: string;
+  merchant: string;
+  amountCents: number;
+  collections: [Collection, Collection];
+};
+
+export type PaySplitCard = {
+  last4: string;
+  exp: string;
+  active: boolean;
+};
+
+export type Trip = {
+  id: string;
+  name: string;
+  dates: string;
+  budgetCents: number;
+  status: "open" | "closed";
+  funding: [FundingCard, FundingCard];
+  paySplit: PaySplitCard;
+  charges: Charge[];
+};
+
+export type Draft = {
+  merchant: string;
+  cartCents: number;
+  visaCents: number;
+  mastercardCents: number;
+};
+
+export type DeclineReason = "caps-do-not-cover" | "cap-exceeds-card" | "inactive";
+
+export type ChargeResult =
+  | { ok: true; trip: Trip; collections: [Collection, Collection] }
+  | { ok: false; reason: DeclineReason };
+
+export function spentCents(trip: Trip): number {
+  return trip.charges.reduce((sum, charge) => sum + charge.amountCents, 0);
+}
+
+export function leftCents(trip: Trip): number {
+  return trip.budgetCents - spentCents(trip);
+}
+
+export function declineCopy(reason: Exclude<DeclineReason, "inactive">): string {
+  if (reason === "caps-do-not-cover") {
+    return "Caps do not cover the cart.";
+  }
+  return "A cap is larger than what is left on that card.";
+}
+
+export function masked(last4: string): string {
+  return `····${last4}`;
+}
+
+export function formatDollars(cents: number): string {
+  const negative = cents < 0;
+  const absolute = Math.abs(Math.trunc(cents));
+  const dollars = Math.floor(absolute / 100);
+  const fraction = absolute % 100;
+  return `${negative ? "-" : ""}$${dollars}.${fraction.toString().padStart(2, "0")}`;
+}
+
+/** Exact cents. Empty is missing. Zero is a real cap. More than two decimals is rejected. */
+export function parseCents(value: string): number | null {
+  const trimmed = value.trim().replace(/^\$/, "").replace(/,/g, "");
+  if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) {
+    return null;
+  }
+  const [dollars, fraction = ""] = trimmed.split(".");
+  const cents = Number(dollars) * 100 + Number(fraction.padEnd(2, "0"));
+  if (!Number.isSafeInteger(cents)) {
+    return null;
+  }
+  return cents;
+}
+
+export function centsToInput(cents: number): string {
+  return (cents / 100).toFixed(2);
+}
+
+/**
+ * Two caps that sum to the cart approve.
+ * Any other sum declines the whole cart.
+ * A cap larger than what is left on that card declines the whole cart.
+ */
+export function chargeTrip(trip: Trip, draft: Draft): ChargeResult {
+  if (trip.status !== "open" || !trip.paySplit.active) {
+    return { ok: false, reason: "inactive" };
+  }
+
+  const { cartCents, visaCents, mastercardCents } = draft;
+  if (visaCents + mastercardCents !== cartCents) {
+    return { ok: false, reason: "caps-do-not-cover" };
+  }
+
+  const [visa, mastercard] = trip.funding;
+  if (visaCents > visa.remainingCents || mastercardCents > mastercard.remainingCents) {
+    return { ok: false, reason: "cap-exceeds-card" };
+  }
+
+  const collections: [Collection, Collection] = [
+    { cardId: visa.id, name: visa.name, last4: visa.last4, amountCents: visaCents },
+    {
+      cardId: mastercard.id,
+      name: mastercard.name,
+      last4: mastercard.last4,
+      amountCents: mastercardCents,
+    },
+  ];
+
+  const next: Trip = {
+    ...trip,
+    funding: [
+      { ...visa, remainingCents: visa.remainingCents - visaCents },
+      { ...mastercard, remainingCents: mastercard.remainingCents - mastercardCents },
+    ],
+    charges: [
+      ...trip.charges,
+      {
+        id: `charge-${trip.charges.length + 1}`,
+        merchant: draft.merchant,
+        amountCents: cartCents,
+        collections,
+      },
+    ],
+  };
+
+  return { ok: true, trip: next, collections };
+}
+
+export function closeTrip(trip: Trip): Trip {
+  const [visa, mastercard] = trip.funding;
+  return {
+    ...trip,
+    status: "closed",
+    paySplit: { ...trip.paySplit, active: false },
+    funding: [
+      { ...visa, active: false },
+      { ...mastercard, active: false },
+    ],
+  };
+}
+
+export function initialAustin(): Trip {
+  return {
+    id: "austin",
+    name: "Austin",
+    dates: "Nov 14–17",
+    budgetCents: 65_000,
+    status: "open",
+    funding: [
+      {
+        id: "visa",
+        name: "Everyday Visa",
+        last4: "4242",
+        capCents: 40_000,
+        remainingCents: 40_000,
+        active: true,
+      },
+      {
+        id: "mastercard",
+        name: "World Mastercard",
+        last4: "8188",
+        capCents: 25_000,
+        remainingCents: 25_000,
+        active: true,
+      },
+    ],
+    paySplit: { last4: "7714", exp: "09/28", active: true },
+    charges: [],
+  };
+}
+
+/** The open Austin sample, after the hotel and the DoorDash cart. */
+export function austinSample(): Trip {
+  const hotel = chargeTrip(initialAustin(), {
+    merchant: "The Line Hotel",
+    cartCents: 18_000,
+    visaCents: 11_000,
+    mastercardCents: 7_000,
+  });
+  if (!hotel.ok) {
+    throw new Error("Sample hotel charge was declined.");
+  }
+  const food = chargeTrip(hotel.trip, {
+    merchant: "DoorDash · Luna Thai",
+    cartCents: 2_500,
+    visaCents: 1_500,
+    mastercardCents: 1_000,
+  });
+  if (!food.ok) {
+    throw new Error("Sample DoorDash charge was declined.");
+  }
+  return food.trip;
+}
+
+export function startTrip(current: Trip | null): { ok: true; trip: Trip } | { ok: false; reason: "trip-open" } {
+  if (current?.status === "open") {
+    return { ok: false, reason: "trip-open" };
+  }
+  return { ok: true, trip: austinSample() };
+}
