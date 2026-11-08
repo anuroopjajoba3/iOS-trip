@@ -10,6 +10,7 @@ import {
   formatDollars,
   initialAustin,
   invitePerson,
+  issueTripCard,
   leftCents,
   makeRegisteredCard,
   maxPeople,
@@ -166,6 +167,12 @@ test("another trip is declined while one is open, and closing settles every card
   assert.equal(restarted.trip.charges.length, 0);
   assert.equal(restarted.trip.budgetCents, 50_000);
 
+  const wallet = issueTripCard(new Date("2026-11-08"));
+  const withWallet = startTrip(null, nextTrip, card, wallet);
+  assert.equal(withWallet.ok, true);
+  if (!withWallet.ok) return;
+  assert.equal(withWallet.trip.card.last4, wallet.last4);
+  assert.equal(withWallet.trip.card.exp, wallet.exp);
   assert.equal(startTrip(null, nextTrip, card).ok, true);
 });
 

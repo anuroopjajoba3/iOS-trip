@@ -12,13 +12,16 @@ import {
   type CardKind,
   type TripFriend,
 } from "@/ledger";
-import { colors, Field, Header, KindToggle, Muted, PrimaryButton, Screen, Title } from "@/components/ui";
+import { colors, Field, Header, KindToggle, Muted, PrimaryButton, Screen, Slab, Title } from "@/components/ui";
 import { FaceRow } from "@/components/trip-extras";
 import { useTrip } from "@/store";
 
 export function StartTripScreen() {
   const { start, user } = useTrip();
   const [name, setName] = useState("");
+  const [ownerKind, setOwnerKind] = useState<CardKind>("debit");
+  const [ownerLast4, setOwnerLast4] = useState("");
+  const [ownerLimit, setOwnerLimit] = useState("");
   const [friendName, setFriendName] = useState("");
   const [kind, setKind] = useState<CardKind>("debit");
   const [last4, setLast4] = useState("");
@@ -27,6 +30,7 @@ export function StartTripScreen() {
   const [message, setMessage] = useState<string | null>(null);
 
   const ownerName = user?.name ?? "You";
+  const tripCard = user?.tripCard;
   const slotsLeft = maxFriends - friends.length;
 
   function addFriend() {
@@ -67,17 +71,30 @@ export function StartTripScreen() {
 
   function save() {
     const tripName = name.trim();
+    const digits = parseLast4(ownerLast4);
+    const limitCents = parseCents(ownerLimit);
     if (!tripName) {
       setMessage("Enter a trip name.");
       return;
     }
-    const ok = start(tripName, friends);
+    if (!digits) {
+      setMessage("Enter the last four of your card.");
+      return;
+    }
+    if (limitCents == null || limitCents <= 0) {
+      setMessage("Enter the amount on your card.");
+      return;
+    }
+    const ok = start(tripName, makeRegisteredCard(ownerKind, digits, limitCents), friends);
     if (!ok) return;
     router.replace("/trip");
   }
 
+  const ownerPreview = parseLast4(ownerLast4)
+    ? makeRegisteredCard(ownerKind, ownerLast4, parseCents(ownerLimit) ?? 0)
+    : null;
   const faces = [
-    { id: "you", name: ownerName, card: user?.card ?? makeRegisteredCard("debit", "0000", 0) },
+    { id: "you", name: ownerName, card: ownerPreview ?? makeRegisteredCard("debit", "0000", 0) },
     ...friends.map((friend, index) => ({ id: `draft-${index}`, name: friend.name, card: friend.card })),
   ];
 
@@ -87,22 +104,44 @@ export function StartTripScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Start a trip</Title>
-          <Muted>Your card is already on it. Add up to five friends with their cards. Spend splits equally.</Muted>
+          <Muted>The virtual trip card is already issued. Put your real card under it, then add friends with +.</Muted>
         </View>
       }
       footer={<PrimaryButton label="Open trip" testID="open-trip" onPress={save} />}
     >
       <Field label="Trip" value={name} onChangeText={setName} testID="trip-name" />
-      <Text style={styles.section}>On this trip card</Text>
-      <FaceRow people={faces} />
-      {user?.card ? (
-        <View style={styles.person}>
-          <Text style={styles.personName}>{ownerName} · you</Text>
-          <Text style={styles.personMeta}>
-            {cardLabel(user.card.kind)} {masked(user.card.last4)}
-          </Text>
+      {tripCard ? (
+        <View style={styles.issued}>
+          <Slab
+            tone="trip"
+            label={tripCard.name}
+            title={masked(tripCard.last4)}
+            detail={`exp ${tripCard.exp}`}
+            amount="Virtual"
+            status="Ready"
+            active
+          />
         </View>
       ) : null}
+      <Text style={styles.section}>Your card under it</Text>
+      <KindToggle kind={ownerKind} onChange={setOwnerKind} />
+      <Field
+        label="Last four"
+        value={ownerLast4}
+        onChangeText={setOwnerLast4}
+        keyboardType="number-pad"
+        testID="owner-last4"
+      />
+      <Field
+        label="Limit"
+        value={ownerLimit}
+        onChangeText={setOwnerLimit}
+        keyboardType="decimal-pad"
+        money
+        testID="owner-limit"
+      />
+      <Text style={styles.section}>On this trip card</Text>
+      <FaceRow people={faces} />
       {friends.map((friend, index) => (
         <View key={`${friend.name}-${index}`} style={styles.person}>
           <Text style={styles.personName}>{friend.name}</Text>
@@ -146,8 +185,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingBottom: 8,
   },
+  issued: {
+    marginTop: 18,
+  },
   section: {
     marginTop: 22,
+    marginBottom: 8,
     fontSize: 13,
     color: colors.gray,
   },

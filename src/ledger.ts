@@ -291,7 +291,7 @@ export function austinSample(): Trip {
   return food.trip;
 }
 
-function issueTripCard(now = new Date()): IssuedCard {
+export function issueTripCard(now = new Date()): IssuedCard {
   const last4 = String((now.getTime() % 9000) + 1000).padStart(4, "0");
   return {
     name: "Trip card",
@@ -302,7 +302,12 @@ function issueTripCard(now = new Date()): IssuedCard {
   };
 }
 
-export function openTrip(input: NewTrip, ownerCard: RegisteredCard, now = new Date()): Trip {
+export function openTrip(
+  input: NewTrip,
+  ownerCard: RegisteredCard,
+  tripCard?: IssuedCard,
+  now = new Date(),
+): Trip {
   const ownerName = input.ownerName.trim() || "You";
   const owner: Person = {
     id: "person-1",
@@ -326,7 +331,7 @@ export function openTrip(input: NewTrip, ownerCard: RegisteredCard, now = new Da
     place: input.name.trim(),
     budgetCents,
     status: "open",
-    card: issueTripCard(now),
+    card: tripCard ? { ...tripCard, active: true } : issueTripCard(now),
     charges: [],
     people,
     photos: [],
@@ -358,9 +363,10 @@ export function startTrip(
   current: Trip | null,
   input: NewTrip,
   ownerCard: RegisteredCard,
+  tripCard?: IssuedCard,
 ): { ok: true; trip: Trip } | { ok: false; reason: "trip-open" } {
   if (current?.status === "open") {
     return { ok: false, reason: "trip-open" };
   }
-  return { ok: true, trip: openTrip(input, ownerCard) };
+  return { ok: true, trip: openTrip(input, ownerCard, tripCard) };
 }

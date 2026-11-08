@@ -9,7 +9,7 @@ export function WelcomeScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Trip Wallet</Title>
-          <Muted>Sign up, add your real card, then the app issues a virtual trip card.</Muted>
+          <Muted>Sign up. Trip Wallet gives you a virtual trip card.</Muted>
         </View>
       }
       footer={

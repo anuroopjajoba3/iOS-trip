@@ -4,9 +4,11 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 
 import {
   closeTrip,
+  issueTripCard,
   makeRegisteredCard,
   startTrip,
   type Draft,
+  type IssuedCard,
   type Person,
   type RegisteredCard,
   type Trip,
@@ -55,19 +57,21 @@ function asTrip(value: Trip | null): Trip | null {
   };
 }
 
-const storageKey = "trip-wallet-accounts-v3";
+const storageKey = "trip-wallet-accounts-v4";
 
 export type User = {
   name: string;
   email: string;
-  card: RegisteredCard | null;
+  tripCard: IssuedCard | null;
+  revealedTripCard: boolean;
 };
 
 type Account = {
   name: string;
   email: string;
   passwordHash: string;
-  card: RegisteredCard | null;
+  tripCard: IssuedCard | null;
+  revealedTripCard: boolean;
   trip: Trip | null;
 };
 
@@ -84,12 +88,12 @@ type TripStore = {
   notice: string | null;
   beginCharge: () => void;
   saveCaps: (draft: Draft) => void;
-  start: (name: string, friends: TripFriend[]) => boolean;
+  start: (name: string, ownerCard: RegisteredCard, friends: TripFriend[]) => boolean;
   close: () => void;
   commit: (trip: Trip) => void;
   signUp: (name: string, email: string, password: string) => Promise<string | null>;
   logIn: (email: string, password: string) => Promise<string | null>;
-  registerCard: (card: RegisteredCard) => void;
+  acceptTripCard: () => void;
   logOut: () => void;
 };
 
@@ -103,6 +107,17 @@ async function hashPassword(email: string, password: string) {
   return digestStringAsync(CryptoDigestAlgorithm.SHA256, `${email}:${password}`);
 }
 
+function asAccount(item: Account & { card?: RegisteredCard | IssuedCard }): Account {
+  return {
+    name: item.name,
+    email: item.email,
+    passwordHash: item.passwordHash,
+    tripCard: item.tripCard ?? issueTripCard(),
+    revealedTripCard: item.revealedTripCard ?? false,
+    trip: asTrip(item.trip),
+  };
+}
+
 export function TripProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [accounts, setAccounts] = useState<Record<string, Account>>({});
@@ -112,7 +127,12 @@ export function TripProvider({ children }: { children: ReactNode }) {
 
   const account = session ? accounts[session] ?? null : null;
   const user = account
-    ? { name: account.name, email: account.email, card: account.card }
+    ? {
+        name: account.name,
+        email: account.email,
+        tripCard: account.tripCard,
+        revealedTripCard: account.revealedTripCard,
+      }
     : null;
   const trip = account?.trip ?? null;
 
@@ -123,10 +143,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         if (cancelled || !raw) return;
         const parsed = JSON.parse(raw) as Snapshot;
         const next = Object.fromEntries(
-          Object.entries(parsed.accounts ?? {}).map(([email, item]) => [
-            email,
-            { ...item, card: item.card ?? null, trip: asTrip(item.trip) },
-          ]),
+          Object.entries(parsed.accounts ?? {}).map(([email, item]) => [email, asAccount(item)]),
         );
         setAccounts(next);
         setSession(parsed.session ?? null);
@@ -174,15 +191,16 @@ export function TripProvider({ children }: { children: ReactNode }) {
       notice,
       beginCharge: () => setDraft(null),
       saveCaps: (next) => setDraft(next),
-      start: (name, friends) => {
-        if (!account?.card) {
-          setNotice("Register a trip card first.");
+      start: (name, ownerCard, friends) => {
+        if (!account?.tripCard) {
+          setNotice("Your trip card is not ready.");
           return false;
         }
         const result = startTrip(
           trip,
           { name, ownerName: account.name, friends },
-          account.card,
+          ownerCard,
+          account.tripCard,
         );
         if (!result.ok) {
           setNotice("Starting another trip is declined until this one is closed.");
@@ -206,7 +224,14 @@ export function TripProvider({ children }: { children: ReactNode }) {
         if (password.length < 6) return "Use at least 6 characters.";
         if (accounts[key]) return "That email already has an account.";
         const passwordHash = await hashPassword(key, password);
-        const next: Account = { name: trimmedName, email: key, passwordHash, card: null, trip: null };
+        const next: Account = {
+          name: trimmedName,
+          email: key,
+          passwordHash,
+          tripCard: issueTripCard(),
+          revealedTripCard: false,
+          trip: null,
+        };
         setAccounts((current) => ({ ...current, [key]: next }));
         setSession(key);
         setDraft(null);
@@ -224,7 +249,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         setNotice(null);
         return null;
       },
-      registerCard: (card) => writeAccount({ card }),
+      acceptTripCard: () => writeAccount({ revealedTripCard: true }),
       logOut: () => {
         setSession(null);
         setDraft(null);

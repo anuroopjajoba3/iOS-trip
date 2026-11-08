@@ -9,6 +9,6 @@ export default function HomeRoute() {
   const { ready, user } = useTrip();
   if (!ready) return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
   if (!user) return <WelcomeScreen />;
-  if (!user.card) return <RegisterCardScreen />;
+  if (!user.revealedTripCard) return <RegisterCardScreen />;
   return <TripsScreen />;
 }
