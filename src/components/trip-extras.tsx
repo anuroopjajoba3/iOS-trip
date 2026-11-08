@@ -53,7 +53,6 @@ export function SpentChart({ trip }: { trip: Trip }) {
   const spent = spentCents(trip);
   const left = Math.max(trip.budgetCents - spent, 0);
   const max = Math.max(trip.budgetCents, 1);
-  const [visa, mastercard] = trip.funding;
   return (
     <View style={styles.chart}>
       <Text style={styles.section}>Spend</Text>
@@ -63,14 +62,6 @@ export function SpentChart({ trip }: { trip: Trip }) {
       <Text style={styles.meta}>
         {formatDollars(spent)} spent · {formatDollars(left)} left
       </Text>
-      <View style={styles.legend}>
-        <Text style={styles.meta}>
-          {visa.name} {formatDollars(visa.remainingCents)} left
-        </Text>
-        <Text style={styles.meta}>
-          {mastercard.name} {formatDollars(mastercard.remainingCents)} left
-        </Text>
-      </View>
     </View>
   );
 }

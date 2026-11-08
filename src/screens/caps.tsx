@@ -1,57 +1,37 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
-import {
-  centsToInput,
-  evenSplit,
-  formatDollars,
-  masked,
-  parseCents,
-  type Draft,
-  type Trip,
-} from "@/ledger";
+import { centsToInput, formatDollars, parseCents, type Draft, type Trip } from "@/ledger";
 import { colors, Field, Header, Muted, PrimaryButton, Screen, Title } from "@/components/ui";
 import { useTrip } from "@/store";
 
 export function CapsScreen({ trip }: { trip: Trip }) {
   const { draft, saveCaps } = useTrip();
-  const [visa, mastercard] = trip.funding;
   const [merchant, setMerchant] = useState(draft?.merchant ?? "");
   const [cart, setCart] = useState(draft ? centsToInput(draft.cartCents) : "");
-  const [visaCap, setVisaCap] = useState(draft ? centsToInput(draft.visaCents) : "");
-  const [mcCap, setMcCap] = useState(draft ? centsToInput(draft.mastercardCents) : "");
   const [message, setMessage] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       setMerchant(draft?.merchant ?? "");
       setCart(draft ? centsToInput(draft.cartCents) : "");
-      setVisaCap(draft ? centsToInput(draft.visaCents) : "");
-      setMcCap(draft ? centsToInput(draft.mastercardCents) : "");
     }, [draft]),
   );
 
   const cartCents = parseCents(cart);
-  const visaCents = parseCents(visaCap);
-  const mcCents = parseCents(mcCap);
-  const sum = (visaCents ?? 0) + (mcCents ?? 0);
 
   function save() {
     const name = merchant.trim();
     if (!name || cartCents == null || cartCents <= 0) {
-      setMessage("Enter the merchant and the cart.");
-      return;
-    }
-    if (visaCents == null || mcCents == null) {
-      setMessage("Enter both caps in dollars and cents.");
+      setMessage("Enter the merchant and the amount.");
       return;
     }
     const next: Draft = {
       merchant: name,
       cartCents,
-      visaCents,
-      mastercardCents: mcCents,
+      visaCents: cartCents,
+      mastercardCents: 0,
     };
     saveCaps(next);
     router.push("/card");
@@ -62,54 +42,14 @@ export function CapsScreen({ trip }: { trip: Trip }) {
       header={<Header />}
       pinned={
         <View style={styles.pad}>
-          <Title>Caps</Title>
-          <Muted>Two caps for this cart. They have to sum to it.</Muted>
+          <Title>New charge</Title>
+          <Muted>{`${formatDollars(trip.funding[0].remainingCents)} left on ${trip.card.name}`}</Muted>
         </View>
       }
-      footer={<PrimaryButton label="Save caps" onPress={save} testID="save-caps" />}
+      footer={<PrimaryButton label="Continue" onPress={save} testID="save-caps" />}
     >
       <Field label="Merchant" value={merchant} onChangeText={setMerchant} />
-      <Field label="Cart" value={cart} onChangeText={setCart} keyboardType="decimal-pad" money />
-      <Field
-        label={`${visa.name} ${masked(visa.last4)}`}
-        hint={`${formatDollars(visa.remainingCents)} left`}
-        value={visaCap}
-        onChangeText={setVisaCap}
-        keyboardType="decimal-pad"
-        money
-      />
-      <Field
-        label={`${mastercard.name} ${masked(mastercard.last4)}`}
-        hint={`${formatDollars(mastercard.remainingCents)} left`}
-        value={mcCap}
-        onChangeText={setMcCap}
-        keyboardType="decimal-pad"
-        money
-      />
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Split evenly"
-        onPress={() => {
-          if (cartCents == null || cartCents <= 0) {
-            setMessage("Enter the cart first.");
-            return;
-          }
-          const split = evenSplit(cartCents);
-          setVisaCap(centsToInput(split.visaCents));
-          setMcCap(centsToInput(split.mastercardCents));
-          setMessage(null);
-        }}
-        style={styles.split}
-      >
-        <Text style={styles.splitText}>Split evenly</Text>
-      </Pressable>
-      <Text style={styles.sum}>
-        {visaCents == null ? "—" : formatDollars(visaCents)} + {mcCents == null ? "—" : formatDollars(mcCents)} ={" "}
-        {visaCents == null || mcCents == null ? "—" : formatDollars(sum)}
-      </Text>
-      <Text style={styles.against}>
-        Against a {cartCents == null ? "—" : formatDollars(cartCents)} cart
-      </Text>
+      <Field label="Amount" value={cart} onChangeText={setCart} keyboardType="decimal-pad" money />
       {message ? <Text style={styles.message}>{message}</Text> : null}
     </Screen>
   );
@@ -120,33 +60,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 4,
   },
-  sum: {
-    marginTop: 22,
-    fontSize: 20,
-    lineHeight: 26,
-    fontWeight: "700",
-    letterSpacing: -0.3,
-    color: colors.white,
-  },
-  against: {
-    marginTop: 4,
-    fontSize: 14,
-    lineHeight: 18,
-    color: colors.gray,
-  },
   message: {
     marginTop: 12,
     fontSize: 14,
     lineHeight: 18,
-    color: colors.white,
-  },
-  split: {
-    marginTop: 8,
-    minHeight: 44,
-    justifyContent: "center",
-  },
-  splitText: {
-    fontSize: 16,
     color: colors.white,
   },
 });

@@ -38,9 +38,21 @@ export type Photo = {
   uri: string;
 };
 
+export type CardKind = "credit" | "debit";
+
 export type IssuedCard = {
   name: string;
+  kind: CardKind;
   last4: string;
+  exp: string;
+  active: boolean;
+};
+
+export type RegisteredCard = {
+  kind: CardKind;
+  last4: string;
+  limitCents: number;
+  remainingCents: number;
   exp: string;
   active: boolean;
 };
@@ -206,7 +218,7 @@ export function initialAustin(): Trip {
         active: true,
       },
     ],
-    card: { name: "Trip card", last4: "7714", exp: "09/28", active: true },
+    card: { name: "Trip card", kind: "debit", last4: "7714", exp: "09/28", active: true },
     charges: [],
     people: [],
     photos: [],
@@ -238,15 +250,7 @@ export function austinSample(): Trip {
 
 export type NewTrip = {
   name: string;
-  dates: string;
-  place: string;
-  cardName: string;
-  visaName: string;
-  visaLast4: string;
-  visaCapCents: number;
-  mastercardName: string;
-  mastercardLast4: string;
-  mastercardCapCents: number;
+  friends: string[];
 };
 
 export function parseLast4(value: string): string | null {
@@ -257,13 +261,28 @@ export function parseLast4(value: string): string | null {
   return digits;
 }
 
-export function issueCard(now = new Date()): { last4: string; exp: string } {
-  const last4 = String(now.getTime() % 10_000).padStart(4, "0");
+export function issueCard(now = new Date()): { exp: string } {
   const expDate = new Date(now);
   expDate.setFullYear(expDate.getFullYear() + 2);
   const month = String(expDate.getMonth() + 1).padStart(2, "0");
   const year = String(expDate.getFullYear()).slice(-2);
-  return { last4, exp: `${month}/${year}` };
+  return { exp: `${month}/${year}` };
+}
+
+export function makeRegisteredCard(
+  kind: CardKind,
+  last4: string,
+  limitCents: number,
+  now = new Date(),
+): RegisteredCard {
+  return {
+    kind,
+    last4,
+    limitCents,
+    remainingCents: limitCents,
+    exp: issueCard(now).exp,
+    active: true,
+  };
 }
 
 export function evenSplit(cartCents: number): { visaCents: number; mastercardCents: number } {
@@ -271,43 +290,60 @@ export function evenSplit(cartCents: number): { visaCents: number; mastercardCen
   return { visaCents, mastercardCents: cartCents - visaCents };
 }
 
-export function openTrip(input: NewTrip, now = new Date()): Trip {
-  const issued = issueCard(now);
+export function cardLabel(kind: CardKind) {
+  return kind === "credit" ? "Credit" : "Debit";
+}
+
+export function openTrip(input: NewTrip, card: RegisteredCard, now = new Date()): Trip {
+  const kindName = cardLabel(card.kind);
+  const friends = input.friends.map((name, index) => ({
+    id: `person-${index + 1}`,
+    name: name.trim(),
+  })).filter((person) => person.name).slice(0, 5);
   return {
     id: `trip-${now.getTime()}`,
     name: input.name.trim(),
-    dates: input.dates.trim(),
-    place: input.place.trim() || input.name.trim(),
-    budgetCents: input.visaCapCents + input.mastercardCapCents,
+    dates: "",
+    place: input.name.trim(),
+    budgetCents: card.remainingCents,
     status: "open",
     funding: [
       {
         id: "visa",
-        name: input.visaName.trim() || "Visa",
-        last4: input.visaLast4,
-        capCents: input.visaCapCents,
-        remainingCents: input.visaCapCents,
+        name: kindName,
+        last4: card.last4,
+        capCents: card.remainingCents,
+        remainingCents: card.remainingCents,
         active: true,
       },
       {
         id: "mastercard",
-        name: input.mastercardName.trim() || "Mastercard",
-        last4: input.mastercardLast4,
-        capCents: input.mastercardCapCents,
-        remainingCents: input.mastercardCapCents,
-        active: true,
+        name: "Reserve",
+        last4: "0000",
+        capCents: 0,
+        remainingCents: 0,
+        active: false,
       },
     ],
-    card: { name: input.cardName.trim() || "Trip card", ...issued, active: true },
+    card: {
+      name: kindName,
+      kind: card.kind,
+      last4: card.last4,
+      exp: card.exp,
+      active: true,
+    },
     charges: [],
-    people: [],
+    people: friends,
     photos: [],
   };
 }
 
+export const maxFriends = 5;
+
 export function invitePerson(trip: Trip, name: string): Trip {
   const trimmed = name.trim();
   if (!trimmed) return trip;
+  if (trip.people.length >= maxFriends) return trip;
   if (trip.people.some((person) => person.name.toLowerCase() === trimmed.toLowerCase())) {
     return trip;
   }
@@ -320,9 +356,10 @@ export function invitePerson(trip: Trip, name: string): Trip {
 export function startTrip(
   current: Trip | null,
   input: NewTrip,
+  card: RegisteredCard,
 ): { ok: true; trip: Trip } | { ok: false; reason: "trip-open" } {
   if (current?.status === "open") {
     return { ok: false, reason: "trip-open" };
   }
-  return { ok: true, trip: openTrip(input) };
+  return { ok: true, trip: openTrip(input, card) };
 }

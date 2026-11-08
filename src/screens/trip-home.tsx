@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { formatDollars, leftCents, masked, type Trip } from "@/ledger";
-import { colors, DatePill, Header, HeroMoney, PrimaryButton, RowEnter, Screen, Title } from "@/components/ui";
+import { colors, Header, HeroMoney, PrimaryButton, RowEnter, Screen, Title } from "@/components/ui";
 import { FaceRow, PhotoStrip, PlaceMap, SpentChart } from "@/components/trip-extras";
 import { useTrip } from "@/store";
 import { TripStack } from "@/screens/trips";
@@ -57,10 +57,8 @@ export function TripHome({ trip }: { trip: Trip }) {
       pinned={
         <View style={styles.pinned}>
           <Title>{trip.name}</Title>
-          <DatePill>{trip.dates.toUpperCase()}</DatePill>
           <Text style={styles.still}>STILL LEFT</Text>
           <HeroMoney>{formatDollars(leftCents(trip))}</HeroMoney>
-          <FaceRow people={trip.people} onPress={() => router.push("/share")} />
         </View>
       }
       footer={
@@ -74,8 +72,9 @@ export function TripHome({ trip }: { trip: Trip }) {
         />
       }
     >
-      <SpentChart trip={trip} />
       <TripStack trip={trip} />
+      <FaceRow people={trip.people} onPress={() => router.push("/share")} />
+      <SpentChart trip={trip} />
       <Text style={styles.section}>Charges</Text>
       {trip.charges.map((charge, index) => (
         <RowEnter key={charge.id} index={index}>

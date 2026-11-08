@@ -1,4 +1,5 @@
 import { WelcomeScreen } from "@/screens/welcome";
+import { RegisterCardScreen } from "@/screens/register-card";
 import { TripsScreen } from "@/screens/trips";
 import { colors } from "@/components/ui";
 import { useTrip } from "@/store";
@@ -8,5 +9,6 @@ export default function HomeRoute() {
   const { ready, user } = useTrip();
   if (!ready) return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
   if (!user) return <WelcomeScreen />;
+  if (!user.card) return <RegisterCardScreen />;
   return <TripsScreen />;
 }

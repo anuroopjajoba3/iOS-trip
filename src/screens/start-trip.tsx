@@ -1,71 +1,50 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { formatDollars, parseCents, parseLast4 } from "@/ledger";
+import { maxFriends } from "@/ledger";
 import { colors, Field, Header, Muted, PrimaryButton, Screen, Title } from "@/components/ui";
+import { FaceRow } from "@/components/trip-extras";
 import { useTrip } from "@/store";
 
 export function StartTripScreen() {
   const { start } = useTrip();
   const [name, setName] = useState("");
-  const [dates, setDates] = useState("");
-  const [place, setPlace] = useState("");
-  const [cardName, setCardName] = useState("");
-  const [visaName, setVisaName] = useState("");
-  const [visaLast4, setVisaLast4] = useState("");
-  const [visaCap, setVisaCap] = useState("");
-  const [mcName, setMcName] = useState("");
-  const [mcLast4, setMcLast4] = useState("");
-  const [mcCap, setMcCap] = useState("");
+  const [friend, setFriend] = useState("");
+  const [friends, setFriends] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
 
-  const visaCents = parseCents(visaCap);
-  const mcCents = parseCents(mcCap);
-  const budget = (visaCents ?? 0) + (mcCents ?? 0);
+  function addFriend() {
+    const next = friend.trim();
+    if (!next) {
+      setMessage("Enter a name.");
+      return;
+    }
+    if (friends.length >= maxFriends) {
+      setMessage("Five friends on this card.");
+      return;
+    }
+    if (friends.some((item) => item.toLowerCase() === next.toLowerCase())) {
+      setMessage("That friend is already on the card.");
+      return;
+    }
+    setFriends([...friends, next]);
+    setFriend("");
+    setMessage(null);
+  }
 
   function save() {
     const tripName = name.trim();
-    const tripDates = dates.trim();
-    const tripPlace = place.trim();
-    const issuedName = cardName.trim();
-    const visa = parseLast4(visaLast4);
-    const mastercard = parseLast4(mcLast4);
-    if (!tripName || !tripDates || !tripPlace) {
-      setMessage("Enter the trip name, dates, and city.");
+    if (!tripName) {
+      setMessage("Enter a trip name.");
       return;
     }
-    if (!issuedName) {
-      setMessage("Name the trip card.");
-      return;
-    }
-    if (!visaName.trim() || !mcName.trim()) {
-      setMessage("Name both of your cards.");
-      return;
-    }
-    if (!visa || !mastercard) {
-      setMessage("Enter the last four digits of each card.");
-      return;
-    }
-    if (visaCents == null || mcCents == null || visaCents <= 0 || mcCents <= 0) {
-      setMessage("Enter a cap for each card.");
-      return;
-    }
-    const ok = start({
-      name: tripName,
-      dates: tripDates,
-      place: tripPlace,
-      cardName: issuedName,
-      visaName: visaName.trim(),
-      visaLast4: visa,
-      visaCapCents: visaCents,
-      mastercardName: mcName.trim(),
-      mastercardLast4: mastercard,
-      mastercardCapCents: mcCents,
-    });
+    const ok = start(tripName, friends);
     if (!ok) return;
     router.replace("/trip");
   }
+
+  const people = friends.map((item, index) => ({ id: `draft-${index}`, name: item }));
 
   return (
     <Screen
@@ -73,46 +52,32 @@ export function StartTripScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Start a trip</Title>
-          <Muted>Your cards. Your trip card. Your people.</Muted>
+          <Muted>A name, then up to five friends on your trip card.</Muted>
         </View>
       }
       footer={<PrimaryButton label="Open trip" testID="open-trip" onPress={save} />}
     >
       <Field label="Trip" value={name} onChangeText={setName} />
-      <Field label="Dates" value={dates} onChangeText={setDates} />
-      <Field label="City" value={place} onChangeText={setPlace} />
-      <Field label="Trip card name" value={cardName} onChangeText={setCardName} />
-      <Field label="Visa name" value={visaName} onChangeText={setVisaName} />
-      <Field
-        label="Visa last four"
-        value={visaLast4}
-        onChangeText={setVisaLast4}
-        keyboardType="number-pad"
-      />
-      <Field
-        label="Visa cap"
-        value={visaCap}
-        onChangeText={setVisaCap}
-        keyboardType="decimal-pad"
-        money
-      />
-      <Field label="Mastercard name" value={mcName} onChangeText={setMcName} />
-      <Field
-        label="Mastercard last four"
-        value={mcLast4}
-        onChangeText={setMcLast4}
-        keyboardType="number-pad"
-      />
-      <Field
-        label="Mastercard cap"
-        value={mcCap}
-        onChangeText={setMcCap}
-        keyboardType="decimal-pad"
-        money
-      />
-      <Text style={styles.budget}>
-        Trip budget {visaCents == null || mcCents == null ? "—" : formatDollars(budget)}
-      </Text>
+      <Text style={styles.section}>Friends</Text>
+      <FaceRow people={people} />
+      {friends.length < maxFriends ? (
+        <View style={styles.addRow}>
+          <View style={styles.friendField}>
+            <Field label="Name" value={friend} onChangeText={setFriend} />
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Add friend"
+            testID="add-friend"
+            onPress={addFriend}
+            style={styles.plus}
+          >
+            <Text style={styles.plusMark}>+</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <Text style={styles.full}>Five friends on this card.</Text>
+      )}
       {message ? <Text style={styles.message}>{message}</Text> : null}
     </Screen>
   );
@@ -123,16 +88,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingBottom: 8,
   },
-  budget: {
+  section: {
     marginTop: 22,
+    fontSize: 13,
+    color: colors.gray,
+  },
+  addRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 10,
+  },
+  friendField: {
+    flex: 1,
+  },
+  plus: {
+    width: 52,
+    minHeight: 52,
+    marginBottom: 2,
+    borderRadius: 26,
+    backgroundColor: colors.trip,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  plusMark: {
+    fontSize: 28,
+    lineHeight: 30,
+    color: colors.ink,
+  },
+  full: {
+    marginTop: 12,
     fontSize: 14,
-    lineHeight: 18,
     color: colors.gray,
   },
   message: {
     marginTop: 12,
     fontSize: 14,
-    lineHeight: 18,
     color: colors.white,
   },
 });

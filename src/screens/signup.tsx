@@ -18,7 +18,7 @@ export function SignUpScreen() {
       setMessage(error);
       return;
     }
-    router.replace("/");
+    router.replace("/register");
   }
 
   return (

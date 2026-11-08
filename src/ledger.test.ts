@@ -148,19 +148,16 @@ test("Austin hotel then DoorDash approve, and a later mismatch collects nothing"
 
 test("another trip is declined while one is open, and closing the trip settles the cards", () => {
   const open = austinSample();
-  const nextTrip = {
-    name: "Miami",
-    dates: "Dec 2–5",
-    place: "Miami",
-    cardName: "Miami card",
-    visaName: "Sam Visa",
-    visaLast4: "1111",
-    visaCapCents: 20_000,
-    mastercardName: "Sam Mastercard",
-    mastercardLast4: "2222",
-    mastercardCapCents: 10_000,
+  const nextTrip = { name: "Miami", friends: ["Alex"] };
+  const card = {
+    kind: "debit" as const,
+    last4: "1111",
+    limitCents: 30_000,
+    remainingCents: 30_000,
+    exp: "11/28",
+    active: true,
   };
-  assert.deepEqual(startTrip(open, nextTrip), { ok: false, reason: "trip-open" });
+  assert.deepEqual(startTrip(open, nextTrip, card), { ok: false, reason: "trip-open" });
 
   const closed = closeTrip(open);
   assert.equal(closed.status, "closed");
@@ -180,16 +177,17 @@ test("another trip is declined while one is open, and closing the trip settles t
   assert.deepEqual(afterClose, { ok: false, reason: "inactive" });
   assert.equal(closed.charges.length, open.charges.length);
 
-  const restarted = startTrip(closed, nextTrip);
+  const restarted = startTrip(closed, nextTrip, card);
   assert.equal(restarted.ok, true);
   if (!restarted.ok) return;
   assert.equal(restarted.trip.status, "open");
   assert.equal(restarted.trip.card.active, true);
-  assert.equal(restarted.trip.card.name, "Miami card");
+  assert.equal(restarted.trip.card.name, "Debit");
+  assert.equal(restarted.trip.card.last4, "1111");
   assert.equal(restarted.trip.name, "Miami");
-  assert.equal(restarted.trip.funding[0].last4, "1111");
+  assert.equal(restarted.trip.people[0]?.name, "Alex");
   assert.equal(restarted.trip.charges.length, 0);
   assert.equal(restarted.trip.budgetCents, 30_000);
 
-  assert.equal(startTrip(null, nextTrip).ok, true);
+  assert.equal(startTrip(null, nextTrip, card).ok, true);
 });

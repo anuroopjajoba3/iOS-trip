@@ -56,9 +56,9 @@ export function TripsScreen() {
           >
             <Slab
               tone="trip"
-              label={trip.dates}
+              label={trip.card.name}
               title={trip.name}
-              detail={open ? `${trip.card.name} active` : `${trip.card.name} inactive`}
+              detail={`${trip.people.length} friend${trip.people.length === 1 ? "" : "s"}`}
               amount={`${formatDollars(leftCents(trip))} left`}
               status={open ? "Active" : "Inactive"}
               active={open}
@@ -73,8 +73,6 @@ export function TripsScreen() {
 
 export function TripStack({ trip }: { trip: Trip }) {
   const open = trip.status === "open";
-  const [visa, mastercard] = trip.funding;
-  const status = open ? "Active" : "Inactive";
   return (
     <WalletStack
       cards={[
@@ -84,26 +82,8 @@ export function TripStack({ trip }: { trip: Trip }) {
           title: masked(trip.card.last4),
           detail: `exp ${trip.card.exp}`,
           amount: `${formatDollars(leftCents(trip))} left`,
-          status,
+          status: open ? "Active" : "Inactive",
           active: open,
-        },
-        {
-          tone: "visa",
-          label: visa.name,
-          title: masked(visa.last4),
-          detail: `Cap ${formatDollars(visa.capCents)}`,
-          amount: `${formatDollars(visa.remainingCents)} left`,
-          status,
-          active: open && visa.active,
-        },
-        {
-          tone: "mastercard",
-          label: mastercard.name,
-          title: masked(mastercard.last4),
-          detail: `Cap ${formatDollars(mastercard.capCents)}`,
-          amount: `${formatDollars(mastercard.remainingCents)} left`,
-          status,
-          active: open && mastercard.active,
         },
       ]}
     />

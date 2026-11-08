@@ -2,31 +2,41 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { digestStringAsync, CryptoDigestAlgorithm } from "expo-crypto";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
-import { closeTrip, invitePerson, startTrip, type Draft, type NewTrip, type Trip } from "@/ledger";
+import {
+  closeTrip,
+  startTrip,
+  type Draft,
+  type RegisteredCard,
+  type Trip,
+} from "@/ledger";
 
 function asTrip(value: Trip | null): Trip | null {
   if (!value) return null;
   const legacy = value as Trip & { paySplit?: { last4: string; exp: string; active: boolean } };
-  const card = value.card ?? (legacy.paySplit ? { name: "Trip card", ...legacy.paySplit } : undefined);
+  const card = value.card ?? (legacy.paySplit ? { name: "Debit", kind: "debit" as const, ...legacy.paySplit } : undefined);
   if (!card) return value;
   return {
     ...value,
-    card,
+    card: { ...card, kind: card.kind ?? "debit" },
     place: value.place ?? value.name,
     people: value.people ?? [],
     photos: value.photos ?? [],
   };
 }
 
-const storageKey = "trip-wallet-accounts-v1";
+const storageKey = "trip-wallet-accounts-v2";
 
 export type User = {
   name: string;
   email: string;
+  card: RegisteredCard | null;
 };
 
-type Account = User & {
+type Account = {
+  name: string;
+  email: string;
   passwordHash: string;
+  card: RegisteredCard | null;
   trip: Trip | null;
 };
 
@@ -43,11 +53,12 @@ type TripStore = {
   notice: string | null;
   beginCharge: () => void;
   saveCaps: (draft: Draft) => void;
-  start: (input: NewTrip) => boolean;
+  start: (name: string, friends: string[]) => boolean;
   close: () => void;
   commit: (trip: Trip) => void;
   signUp: (name: string, email: string, password: string) => Promise<string | null>;
   logIn: (email: string, password: string) => Promise<string | null>;
+  registerCard: (card: RegisteredCard) => void;
   logOut: () => void;
 };
 
@@ -68,8 +79,11 @@ export function TripProvider({ children }: { children: ReactNode }) {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const user = session ? accounts[session] ?? null : null;
-  const trip = user?.trip ?? null;
+  const account = session ? accounts[session] ?? null : null;
+  const user = account
+    ? { name: account.name, email: account.email, card: account.card }
+    : null;
+  const trip = account?.trip ?? null;
 
   useEffect(() => {
     let cancelled = false;
@@ -77,13 +91,13 @@ export function TripProvider({ children }: { children: ReactNode }) {
       .then((raw) => {
         if (cancelled || !raw) return;
         const parsed = JSON.parse(raw) as Snapshot;
-        const accounts = Object.fromEntries(
-          Object.entries(parsed.accounts ?? {}).map(([email, account]) => [
+        const next = Object.fromEntries(
+          Object.entries(parsed.accounts ?? {}).map(([email, item]) => [
             email,
-            { ...account, trip: asTrip(account.trip) },
+            { ...item, card: item.card ?? null, trip: asTrip(item.trip) },
           ]),
         );
-        setAccounts(accounts);
+        setAccounts(next);
         setSession(parsed.session ?? null);
       })
       .catch(() => undefined)
@@ -101,34 +115,47 @@ export function TripProvider({ children }: { children: ReactNode }) {
     AsyncStorage.setItem(storageKey, JSON.stringify(snapshot)).catch(() => undefined);
   }, [accounts, ready, session]);
 
+  function writeAccount(patch: Partial<Account>) {
+    if (!session) return;
+    setAccounts((current) => {
+      const item = current[session];
+      if (!item) return current;
+      return { ...current, [session]: { ...item, ...patch } };
+    });
+  }
+
   function writeTrip(next: Trip | null | ((current: Trip | null) => Trip | null)) {
     if (!session) return;
     setAccounts((current) => {
-      const account = current[session];
-      if (!account) return current;
-      const tripValue = typeof next === "function" ? next(account.trip) : next;
-      return { ...current, [session]: { ...account, trip: tripValue } };
+      const item = current[session];
+      if (!item) return current;
+      const tripValue = typeof next === "function" ? next(item.trip) : next;
+      return { ...current, [session]: { ...item, trip: tripValue } };
     });
   }
 
   const store = useMemo<TripStore>(
     () => ({
       ready,
-      user: user ? { name: user.name, email: user.email } : null,
+      user,
       trip,
       draft,
       notice,
       beginCharge: () => setDraft(null),
       saveCaps: (next) => setDraft(next),
-      start: (input) => {
-        const result = startTrip(trip, input);
+      start: (name, friends) => {
+        if (!account?.card) {
+          setNotice("Register a trip card first.");
+          return false;
+        }
+        const result = startTrip(trip, { name, friends }, account.card);
         if (!result.ok) {
           setNotice("Starting another trip is declined until this one is closed.");
           return false;
         }
         setNotice(null);
         setDraft(null);
-        writeTrip(user ? invitePerson(result.trip, user.name) : result.trip);
+        writeTrip(result.trip);
         return true;
       },
       close: () => {
@@ -144,8 +171,8 @@ export function TripProvider({ children }: { children: ReactNode }) {
         if (password.length < 6) return "Use at least 6 characters.";
         if (accounts[key]) return "That email already has an account.";
         const passwordHash = await hashPassword(key, password);
-        const account: Account = { name: trimmedName, email: key, passwordHash, trip: null };
-        setAccounts((current) => ({ ...current, [key]: account }));
+        const next: Account = { name: trimmedName, email: key, passwordHash, card: null, trip: null };
+        setAccounts((current) => ({ ...current, [key]: next }));
         setSession(key);
         setDraft(null);
         setNotice(null);
@@ -153,22 +180,23 @@ export function TripProvider({ children }: { children: ReactNode }) {
       },
       logIn: async (email, password) => {
         const key = normalizeEmail(email);
-        const account = accounts[key];
-        if (!account) return "No account for that email.";
+        const item = accounts[key];
+        if (!item) return "No account for that email.";
         const passwordHash = await hashPassword(key, password);
-        if (passwordHash !== account.passwordHash) return "Wrong password.";
+        if (passwordHash !== item.passwordHash) return "Wrong password.";
         setSession(key);
         setDraft(null);
         setNotice(null);
         return null;
       },
+      registerCard: (card) => writeAccount({ card }),
       logOut: () => {
         setSession(null);
         setDraft(null);
         setNotice(null);
       },
     }),
-    [accounts, draft, notice, ready, session, trip, user],
+    [account, accounts, draft, notice, ready, session, trip, user],
   );
 
   return <TripContext.Provider value={store}>{children}</TripContext.Provider>;

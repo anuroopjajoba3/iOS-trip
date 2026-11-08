@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Pressable, Share, StyleSheet, Text, View } from "react-native";
 
-import { invitePerson } from "@/ledger";
+import { invitePerson, maxFriends } from "@/ledger";
 import { colors, Field, Header, Muted, PrimaryButton, Screen, Title } from "@/components/ui";
 import { FaceRow } from "@/components/trip-extras";
 import { useTrip } from "@/store";
@@ -15,6 +15,10 @@ export function ShareScreen() {
 
   function invite() {
     const next = invitePerson(openTrip, name);
+    if (openTrip.people.length >= maxFriends) {
+      setMessage("Five friends on this card.");
+      return;
+    }
     if (next.people.length === openTrip.people.length) {
       setMessage("Enter a name to invite.");
       return;
@@ -41,7 +45,7 @@ export function ShareScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Sharing</Title>
-          <Muted>{openTrip.name}</Muted>
+          <Muted>{`${openTrip.name} · ${maxFriends} friends max`}</Muted>
         </View>
       }
       footer={<PrimaryButton label="Share" testID="share-trip" onPress={share} />}
