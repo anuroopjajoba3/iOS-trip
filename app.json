@@ -10,7 +10,8 @@
     "ios": {
       "icon": "./assets/expo.icon",
       "supportsTablet": true,
-      "bundleIdentifier": "com.iostrip.wallet"
+      "bundleIdentifier": "com.iostrip.wallet",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
