@@ -1,6 +1,6 @@
 /**
  * The merchant charges one Trip card for the full cart.
- * Up to five people sit under that card, each with their own credit or debit card.
+ * You plus up to five friends sit under that card, each with their own credit or debit card.
  * Every approved cart is split equally across those cards, so nobody fronts the trip.
  * If anyone cannot cover their equal share, the whole cart is declined.
  */
@@ -85,7 +85,8 @@ export type NewTrip = {
   friends: TripFriend[];
 };
 
-export const maxPeople = 5;
+export const maxFriends = 5;
+export const maxPeople = maxFriends + 1;
 
 export function spentCents(trip: Trip): number {
   return trip.charges.reduce((sum, charge) => sum + charge.amountCents, 0);

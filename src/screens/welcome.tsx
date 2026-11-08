@@ -16,7 +16,7 @@ export function WelcomeScreen() {
         <PrimaryButton label="Sign up" testID="sign-up" onPress={() => router.push("/signup")} />
       }
     >
-      <Text style={styles.body}>Shops charge one trip card. Under it, up to five people each keep their own credit or debit card. Every spend splits equally, so nobody pays for the group and waits to be paid back.</Text>
+      <Text style={styles.body}>Shops charge one trip card. Under it, you plus up to five friends each keep a credit or debit card. Every spend splits equally, so nobody pays for the group and waits to be paid back.</Text>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Log in"

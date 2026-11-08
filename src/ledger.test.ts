@@ -19,6 +19,7 @@ import {
 test("equal shares cover the cart, leftover cents go first", () => {
   assert.deepEqual(equalShares(2_500, 5), [500, 500, 500, 500, 500]);
   assert.deepEqual(equalShares(1_001, 5), [201, 200, 200, 200, 200]);
+  assert.deepEqual(equalShares(9_000, 6), [1_500, 1_500, 1_500, 1_500, 1_500, 1_500]);
   assert.deepEqual(equalShares(100, 1), [100]);
   assert.deepEqual(equalShares(100, 0), []);
 });
@@ -168,9 +169,9 @@ test("another trip is declined while one is open, and closing settles every card
   assert.equal(startTrip(null, nextTrip, card).ok, true);
 });
 
-test("a trip holds at most five people, each with a card", () => {
+test("a trip holds you plus five friends, each with a card", () => {
   const card = makeRegisteredCard("debit", "1111", 10_000, new Date("2026-11-08"));
-  const friends = ["Alex", "Sam", "Riya", "Kabir", "Extra"].map((name, index) => ({
+  const friends = ["Alex", "Sam", "Riya", "Kabir", "Meera", "Extra"].map((name, index) => ({
     name,
     card: makeRegisteredCard("credit", `200${index}`, 10_000, new Date("2026-11-08")),
   }));
@@ -180,12 +181,12 @@ test("a trip holds at most five people, each with a card", () => {
   assert.equal(opened.trip.people.length, maxPeople);
   assert.deepEqual(
     opened.trip.people.map((person) => person.name),
-    ["Jordan", "Alex", "Sam", "Riya", "Kabir"],
+    ["Jordan", "Alex", "Sam", "Riya", "Kabir", "Meera"],
   );
 
   const extra = invitePerson(
     opened.trip,
-    "Meera",
+    "Dev",
     makeRegisteredCard("debit", "5555", 10_000, new Date("2026-11-08")),
   );
   assert.equal(extra.people.length, maxPeople);

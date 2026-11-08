@@ -1,6 +1,6 @@
 # Trip wallet
 
-Sign up. Register your card. Start a trip. Put up to five people's cards under one trip card.
+Sign up. Register your card. Start a trip. Put your card and up to five friends' cards under one trip card.
 
 Merchants charge that one trip card for the full amount. Under it, every person's credit or debit card is charged an equal share. Nobody fronts the trip and waits to be paid back. If anyone cannot cover their share, the whole cart is declined.
 

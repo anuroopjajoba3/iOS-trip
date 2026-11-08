@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { formatDollars, spentCents, type Person, type Photo, type Trip } from "@/ledger";
+import { formatDollars, maxPeople, spentCents, type Person, type Photo, type Trip } from "@/ledger";
 import { colors } from "@/components/ui";
 
 const faceColors = ["#F0C24B", "#8EAF7A", "#A9D4C2", "#E8A0A0", "#8FA4D4", "#D4B48F"];
@@ -32,7 +32,7 @@ export function FaceRow({
           <Text style={styles.facePlus}>+</Text>
         </View>
       ) : (
-        people.slice(0, 6).map((person) => (
+        people.slice(0, maxPeople).map((person) => (
           <View key={person.id} style={[styles.face, { backgroundColor: faceColor(person.name) }]}>
             <Text style={styles.faceText}>{initials(person.name)}</Text>
           </View>

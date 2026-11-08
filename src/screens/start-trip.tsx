@@ -6,7 +6,7 @@ import {
   cardLabel,
   makeRegisteredCard,
   masked,
-  maxPeople,
+  maxFriends,
   parseCents,
   parseLast4,
   type CardKind,
@@ -27,7 +27,7 @@ export function StartTripScreen() {
   const [message, setMessage] = useState<string | null>(null);
 
   const ownerName = user?.name ?? "You";
-  const slotsLeft = maxPeople - 1 - friends.length;
+  const slotsLeft = maxFriends - friends.length;
 
   function addFriend() {
     const nextName = friendName.trim();
@@ -38,7 +38,7 @@ export function StartTripScreen() {
       return;
     }
     if (slotsLeft <= 0) {
-      setMessage("Five people on this trip card.");
+      setMessage("Five friends on this trip card.");
       return;
     }
     if (nextName.toLowerCase() === ownerName.toLowerCase()) {
@@ -87,7 +87,7 @@ export function StartTripScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Start a trip</Title>
-          <Muted>Your card is already on it. Add friends with their cards. Spend splits equally.</Muted>
+          <Muted>Your card is already on it. Add up to five friends with their cards. Spend splits equally.</Muted>
         </View>
       }
       footer={<PrimaryButton label="Open trip" testID="open-trip" onPress={save} />}
@@ -134,7 +134,7 @@ export function StartTripScreen() {
           <Field label="Limit" value={limit} onChangeText={setLimit} keyboardType="decimal-pad" money testID="friend-limit" />
         </View>
       ) : (
-        <Text style={styles.full}>Five people on this trip card.</Text>
+        <Text style={styles.full}>Five friends on this trip card.</Text>
       )}
       {message ? <Text style={styles.message}>{message}</Text> : null}
     </Screen>

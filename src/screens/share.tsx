@@ -6,6 +6,7 @@ import {
   invitePerson,
   makeRegisteredCard,
   masked,
+  maxFriends,
   maxPeople,
   parseCents,
   parseLast4,
@@ -28,7 +29,7 @@ export function ShareScreen() {
 
   function invite() {
     if (full) {
-      setMessage("Five people on this trip card.");
+      setMessage("Five friends on this trip card.");
       return;
     }
     const digits = parseLast4(last4);
@@ -75,7 +76,7 @@ export function ShareScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Sharing</Title>
-          <Muted>{`${openTrip.name} · ${openTrip.people.length} of ${maxPeople} people`}</Muted>
+          <Muted>{`${openTrip.name} · you plus ${Math.max(openTrip.people.length - 1, 0)} of ${maxFriends} friends`}</Muted>
         </View>
       }
       footer={<PrimaryButton label="Share" testID="share-trip" onPress={share} />}
@@ -90,7 +91,7 @@ export function ShareScreen() {
         </View>
       ))}
       {full ? (
-        <Text style={styles.message}>Five people on this trip card.</Text>
+        <Text style={styles.message}>Five friends on this trip card.</Text>
       ) : (
         <View>
           <Field label="Invite" value={name} onChangeText={setName} />
