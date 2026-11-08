@@ -2,32 +2,49 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { formatDollars, leftCents, masked, type Trip } from "@/ledger";
-import { colors, Muted, PrimaryButton, SampleLine, Screen, Title, WalletStack } from "@/components/ui";
+import { colors, Muted, PrimaryButton, Screen, Title, WalletStack } from "@/components/ui";
 import { useTrip } from "@/store";
 
 export function TripsScreen() {
-  const { trip, notice, start } = useTrip();
+  const { trip, notice, user, logOut } = useTrip();
   const open = trip?.status === "open";
 
   return (
     <Screen
+      header={
+        <View style={styles.header}>
+          <View style={styles.headerSpacer} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Log out"
+            testID="log-out"
+            onPress={logOut}
+            style={styles.logOut}
+          >
+            <Text style={styles.logOutText}>Log out</Text>
+          </Pressable>
+        </View>
+      }
       pinned={
         <View style={styles.pad}>
           <Title>Trips</Title>
-          {trip ? <Muted>{trip.dates}</Muted> : <Muted>One PaySplit card. Two funding cards.</Muted>}
+          <Muted>{user ? user.name : "Your trips"}</Muted>
           {notice ? <Muted>{notice}</Muted> : null}
         </View>
       }
       footer={
         open ? undefined : (
-          <PrimaryButton label="Start a trip" onPress={start} testID="start-trip" />
+          <PrimaryButton
+            label="Start a trip"
+            onPress={() => router.push("/start")}
+            testID="start-trip"
+          />
         )
       }
     >
       {!trip ? (
         <View>
-          <Text style={styles.body}>A wallet for one trip.</Text>
-          <SampleLine />
+          <Text style={styles.body}>Start a trip when you are ready. Nothing is preloaded.</Text>
         </View>
       ) : (
         <View>
@@ -40,7 +57,6 @@ export function TripsScreen() {
             <TripStack trip={trip} />
           </Pressable>
           <Muted>{open ? "PaySplit card active" : "PaySplit card inactive"}</Muted>
-          <SampleLine />
         </View>
       )}
     </Screen>
@@ -87,13 +103,35 @@ export function TripStack({ trip }: { trip: Trip }) {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    minHeight: 44,
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerSpacer: {
+    minWidth: 44,
+    minHeight: 44,
+  },
+  logOut: {
+    minHeight: 44,
+    minWidth: 44,
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+  logOutText: {
+    fontSize: 16,
+    lineHeight: 20,
+    color: colors.gray,
+  },
   pad: {
     paddingHorizontal: 22,
     paddingBottom: 12,
   },
   body: {
     fontSize: 14,
-    lineHeight: 18,
+    lineHeight: 20,
     color: colors.gray,
   },
 });

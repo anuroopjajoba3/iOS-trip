@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { formatDollars, masked, spentCents, type Trip } from "@/ledger";
-import { colors, Header, Muted, PrimaryButton, RowEnter, SampleLine, Screen, Title } from "@/components/ui";
+import { colors, Header, Muted, PrimaryButton, RowEnter, Screen, Title } from "@/components/ui";
 import { useTrip } from "@/store";
 import { TripStack } from "@/screens/trips";
 
@@ -66,7 +66,6 @@ export function TripHome({ trip }: { trip: Trip }) {
         </View>
         </RowEnter>
       ))}
-      <SampleLine />
     </Screen>
   );
 }

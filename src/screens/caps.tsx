@@ -68,13 +68,14 @@ export function CapsScreen({ trip }: { trip: Trip }) {
       footer={<PrimaryButton label="Save caps" onPress={save} testID="save-caps" />}
     >
       <Field label="Merchant" value={merchant} onChangeText={setMerchant} />
-      <Field label="Cart" value={cart} onChangeText={setCart} keyboardType="decimal-pad" />
+      <Field label="Cart" value={cart} onChangeText={setCart} keyboardType="decimal-pad" money />
       <Field
         label={`${visa.name} ${masked(visa.last4)}`}
         hint={`${formatDollars(visa.remainingCents)} left`}
         value={visaCap}
         onChangeText={setVisaCap}
         keyboardType="decimal-pad"
+        money
       />
       <Field
         label={`${mastercard.name} ${masked(mastercard.last4)}`}
@@ -82,6 +83,7 @@ export function CapsScreen({ trip }: { trip: Trip }) {
         value={mcCap}
         onChangeText={setMcCap}
         keyboardType="decimal-pad"
+        money
       />
       <Text style={styles.sum}>
         {visaCents == null ? "—" : formatDollars(visaCents)} + {mcCents == null ? "—" : formatDollars(mcCents)} ={" "}

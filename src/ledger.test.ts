@@ -147,7 +147,15 @@ test("Austin hotel then DoorDash approve, and a later mismatch collects nothing"
 
 test("another trip is declined while one is open, and closing the trip settles the cards", () => {
   const open = austinSample();
-  assert.deepEqual(startTrip(open), { ok: false, reason: "trip-open" });
+  const nextTrip = {
+    name: "Miami",
+    dates: "Dec 2–5",
+    visaLast4: "1111",
+    visaCapCents: 20_000,
+    mastercardLast4: "2222",
+    mastercardCapCents: 10_000,
+  };
+  assert.deepEqual(startTrip(open, nextTrip), { ok: false, reason: "trip-open" });
 
   const closed = closeTrip(open);
   assert.equal(closed.status, "closed");
@@ -167,11 +175,15 @@ test("another trip is declined while one is open, and closing the trip settles t
   assert.deepEqual(afterClose, { ok: false, reason: "inactive" });
   assert.equal(closed.charges.length, open.charges.length);
 
-  const restarted = startTrip(closed);
+  const restarted = startTrip(closed, nextTrip);
   assert.equal(restarted.ok, true);
   if (!restarted.ok) return;
   assert.equal(restarted.trip.status, "open");
   assert.equal(restarted.trip.paySplit.active, true);
+  assert.equal(restarted.trip.name, "Miami");
+  assert.equal(restarted.trip.funding[0].last4, "1111");
+  assert.equal(restarted.trip.charges.length, 0);
+  assert.equal(restarted.trip.budgetCents, 30_000);
 
-  assert.equal(startTrip(null).ok, true);
+  assert.equal(startTrip(null, nextTrip).ok, true);
 });

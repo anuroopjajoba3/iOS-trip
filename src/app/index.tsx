@@ -1,5 +1,12 @@
+import { WelcomeScreen } from "@/screens/welcome";
 import { TripsScreen } from "@/screens/trips";
+import { colors } from "@/components/ui";
+import { useTrip } from "@/store";
+import { View } from "react-native";
 
-export default function TripsRoute() {
+export default function HomeRoute() {
+  const { ready, user } = useTrip();
+  if (!ready) return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
+  if (!user) return <WelcomeScreen />;
   return <TripsScreen />;
 }

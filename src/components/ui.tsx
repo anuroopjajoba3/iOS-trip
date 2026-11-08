@@ -197,25 +197,30 @@ export function Field({
   onChangeText,
   keyboardType,
   hint,
+  money,
+  secure,
 }: {
   label: string;
   value: string;
   onChangeText: (value: string) => void;
   keyboardType?: KeyboardTypeOptions;
   hint?: string;
+  money?: boolean;
+  secure?: boolean;
 }) {
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
       {hint ? <Text style={styles.fieldHint}>{hint}</Text> : null}
       <View style={styles.inputRow}>
-        {keyboardType ? <Text style={styles.prefix}>$</Text> : null}
+        {money ? <Text style={styles.prefix}>$</Text> : null}
         <TextInput
           value={value}
           onChangeText={onChangeText}
           keyboardType={keyboardType}
+          secureTextEntry={secure}
           autoCorrect={false}
-          autoCapitalize={keyboardType ? "none" : "words"}
+          autoCapitalize={keyboardType === "email-address" || money || secure ? "none" : "words"}
           placeholderTextColor={colors.gray}
           selectionColor={colors.cream}
           style={styles.input}

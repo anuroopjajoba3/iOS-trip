@@ -4,17 +4,16 @@ One trip. One PaySplit card. Two funding cards.
 
 Merchants charge that one card for the full amount. PaySplit records two collection lines. The merchant authorization is not split. Two caps must sum to the cart in exact cents, or the whole cart is declined. A cap larger than what is left on that card declines the cart too.
 
-Sample only. No bank, issuer, or card is charged.
+Sign up. Start your own trip. There is no preloaded Austin demo.
 
-## Sample
+Merchants still only charge the PaySplit card. Money in the app is recorded on the phone. No bank, issuer, or card is charged.
 
-Austin, Nov 14–17.
+## Use
 
-- Everyday Visa ····4242, cap $400.00
-- World Mastercard ····8188, cap $250.00
-- Budget $650.00. PaySplit ····7714, exp 09/28
-
-The Line Hotel, $180.00, caps $110.00 and $70.00. DoorDash · Luna Thai, $25.00, caps $15.00 and $10.00.
+1. Sign up with your name, email, and password.
+2. Start a trip: name, dates, last four of a Visa and a Mastercard, and a cap on each.
+3. Charge a merchant. Two caps must sum to the cart, or the whole cart is declined.
+4. Close the trip when it is over.
 
 ## Build the iPhone app
 

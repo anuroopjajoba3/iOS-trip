@@ -219,9 +219,69 @@ export function austinSample(): Trip {
   return food.trip;
 }
 
-export function startTrip(current: Trip | null): { ok: true; trip: Trip } | { ok: false; reason: "trip-open" } {
+export type NewTrip = {
+  name: string;
+  dates: string;
+  visaLast4: string;
+  visaCapCents: number;
+  mastercardLast4: string;
+  mastercardCapCents: number;
+};
+
+export function parseLast4(value: string): string | null {
+  const digits = value.trim();
+  if (!/^\d{4}$/.test(digits)) {
+    return null;
+  }
+  return digits;
+}
+
+export function issuePaySplit(now = new Date()): { last4: string; exp: string } {
+  const last4 = String(now.getTime() % 10_000).padStart(4, "0");
+  const expDate = new Date(now);
+  expDate.setFullYear(expDate.getFullYear() + 2);
+  const month = String(expDate.getMonth() + 1).padStart(2, "0");
+  const year = String(expDate.getFullYear()).slice(-2);
+  return { last4, exp: `${month}/${year}` };
+}
+
+export function openTrip(input: NewTrip, now = new Date()): Trip {
+  const paySplit = issuePaySplit(now);
+  return {
+    id: `trip-${now.getTime()}`,
+    name: input.name.trim(),
+    dates: input.dates.trim(),
+    budgetCents: input.visaCapCents + input.mastercardCapCents,
+    status: "open",
+    funding: [
+      {
+        id: "visa",
+        name: "Visa",
+        last4: input.visaLast4,
+        capCents: input.visaCapCents,
+        remainingCents: input.visaCapCents,
+        active: true,
+      },
+      {
+        id: "mastercard",
+        name: "Mastercard",
+        last4: input.mastercardLast4,
+        capCents: input.mastercardCapCents,
+        remainingCents: input.mastercardCapCents,
+        active: true,
+      },
+    ],
+    paySplit: { ...paySplit, active: true },
+    charges: [],
+  };
+}
+
+export function startTrip(
+  current: Trip | null,
+  input: NewTrip,
+): { ok: true; trip: Trip } | { ok: false; reason: "trip-open" } {
   if (current?.status === "open") {
     return { ok: false, reason: "trip-open" };
   }
-  return { ok: true, trip: austinSample() };
+  return { ok: true, trip: openTrip(input) };
 }
