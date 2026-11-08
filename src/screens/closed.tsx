@@ -1,16 +1,9 @@
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
-import { formatDollars, leftCents, masked, type Trip } from "@/ledger";
-import {
-  colors,
-  Money,
-  PaySplitCard,
-  PrimaryButton,
-  SampleLine,
-  Screen,
-  Title,
-} from "@/components/ui";
+import { formatDollars, masked, type Trip } from "@/ledger";
+import { colors, Muted, PrimaryButton, SampleLine, Screen, Title } from "@/components/ui";
+import { TripStack } from "@/screens/trips";
 
 export function ClosedScreen({ trip }: { trip: Trip }) {
   return (
@@ -18,29 +11,15 @@ export function ClosedScreen({ trip }: { trip: Trip }) {
       pinned={
         <View style={styles.pad}>
           <Title>{trip.name}</Title>
-          <Text style={styles.dates}>{trip.dates}</Text>
-          <Text style={styles.settled}>Settled</Text>
-          <View style={styles.money}>
-            <Money amount={formatDollars(leftCents(trip))} caption="still left" />
-          </View>
-          <PaySplitCard card={trip.paySplit} />
+          <Muted>{`${trip.dates} · Settled`}</Muted>
         </View>
       }
       footer={
         <PrimaryButton label="Done" testID="done" onPress={() => router.dismissTo("/")} />
       }
     >
-      <Text style={styles.section}>Cards</Text>
-      {trip.funding.map((card) => (
-        <View key={card.id} style={styles.row}>
-          <Text style={styles.name}>
-            {card.name} {masked(card.last4)}
-          </Text>
-          <Text style={styles.meta}>
-            {formatDollars(card.remainingCents)} settled · Inactive
-          </Text>
-        </View>
-      ))}
+      <TripStack trip={trip} />
+      <Text style={styles.note}>The cards are inactive. This card cannot be charged again.</Text>
       <Text style={styles.section}>Charges</Text>
       {trip.charges.map((charge) => (
         <View key={charge.id} style={styles.charge}>
@@ -50,12 +29,11 @@ export function ClosedScreen({ trip }: { trip: Trip }) {
           </View>
           {charge.collections.map((line) => (
             <Text key={line.cardId} style={styles.meta}>
-              {line.name} {formatDollars(line.amountCents)}
+              {line.name} {masked(line.last4)} {formatDollars(line.amountCents)}
             </Text>
           ))}
         </View>
       ))}
-      <Text style={styles.note}>The cards are inactive. This card cannot be charged again.</Text>
       <SampleLine />
     </Screen>
   );
@@ -63,42 +41,25 @@ export function ClosedScreen({ trip }: { trip: Trip }) {
 
 const styles = StyleSheet.create({
   pad: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingHorizontal: 22,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
-  dates: {
-    marginTop: 4,
-    fontSize: 17,
-    lineHeight: 22,
-    color: colors.muted,
-  },
-  settled: {
-    marginTop: 12,
-    fontSize: 15,
+  note: {
+    marginTop: 16,
+    fontSize: 14,
     lineHeight: 20,
-    color: colors.muted,
-  },
-  money: {
-    marginTop: 4,
-    marginBottom: 16,
+    color: colors.gray,
   },
   section: {
-    marginTop: 8,
+    marginTop: 18,
     marginBottom: 4,
-    fontSize: 15,
-    lineHeight: 20,
-    color: colors.muted,
-  },
-  row: {
-    minHeight: 44,
-    justifyContent: "center",
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.line,
+    fontSize: 13,
+    lineHeight: 16,
+    color: colors.gray,
   },
   charge: {
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.line,
   },
@@ -108,20 +69,14 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   name: {
-    fontSize: 17,
-    lineHeight: 22,
-    color: colors.ink,
+    fontSize: 16,
+    lineHeight: 20,
+    color: colors.white,
   },
   meta: {
     marginTop: 2,
-    fontSize: 15,
-    lineHeight: 20,
-    color: colors.muted,
-  },
-  note: {
-    marginTop: 18,
-    fontSize: 17,
-    lineHeight: 24,
-    color: colors.ink,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.gray,
   },
 });

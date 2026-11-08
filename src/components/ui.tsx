@@ -1,6 +1,7 @@
 import { router } from "expo-router";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import {
+  Animated,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,19 +14,39 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { masked, type PaySplitCard as PaySplitCardModel } from "@/ledger";
-
 export const colors = {
-  accent: "#2C633D",
-  paper: "#F4F1EA",
-  ink: "#1C1C1A",
-  muted: "#5C5C56",
-  line: "#E3E1DA",
+  bg: "#121212",
+  white: "#FFFFFF",
+  gray: "#8E8E93",
+  cream: "#F3EEE4",
+  ink: "#1A1A1A",
+  line: "#2A2A2A",
+  field: "#1C1C1C",
+  paysplit: "#F0C24B",
+  visa: "#8EAF7A",
+  mastercard: "#A9D4C2",
+  paysplitOff: "#3A3428",
+  visaOff: "#2C3329",
+  mastercardOff: "#2A3330",
 };
 
 export const sampleCopy = "Sample only. No bank, issuer, or card is charged.";
 export const authCopy = "The merchant authorization is not split.";
 export const waitingCopy = "The full amount is being fronted on one PaySplit card.";
+
+const slabFill = {
+  paysplit: colors.paysplit,
+  visa: colors.visa,
+  mastercard: colors.mastercard,
+} as const;
+
+const slabFillOff = {
+  paysplit: colors.paysplitOff,
+  visa: colors.visaOff,
+  mastercard: colors.mastercardOff,
+} as const;
+
+export type SlabTone = keyof typeof slabFill;
 
 export function Screen({
   header,
@@ -96,15 +117,6 @@ export function Muted({ children }: { children: string }) {
   return <Text style={styles.muted}>{children}</Text>;
 }
 
-export function Money({ amount, caption }: { amount: string; caption: string }) {
-  return (
-    <View accessibilityRole="text" accessibilityLabel={`${amount} ${caption}`}>
-      <Text style={styles.money}>{amount}</Text>
-      <Text style={styles.caption}>{caption}</Text>
-    </View>
-  );
-}
-
 export function PrimaryButton({
   label,
   onPress,
@@ -152,7 +164,8 @@ export function Field({
           keyboardType={keyboardType}
           autoCorrect={false}
           autoCapitalize={keyboardType ? "none" : "words"}
-          selectionColor={colors.accent}
+          placeholderTextColor={colors.gray}
+          selectionColor={colors.cream}
           style={styles.input}
         />
       </View>
@@ -160,37 +173,98 @@ export function Field({
   );
 }
 
-export function PaySplitCard({
-  card,
+export function Slab({
+  tone,
+  label,
+  title,
+  detail,
   amount,
+  status,
+  active = true,
 }: {
-  card: PaySplitCardModel;
-  amount?: string;
+  tone: SlabTone;
+  label: string;
+  title: string;
+  detail?: string;
+  amount: string;
+  status: string;
+  active?: boolean;
 }) {
-  const live = card.active;
+  const ink = active ? colors.ink : "#E6E1D8";
+  const quiet = active ? "rgba(26,26,26,0.62)" : "#B7B2A8";
   return (
     <View
-      style={[styles.card, live ? styles.cardLive : styles.cardIdle]}
+      style={[styles.slab, { backgroundColor: active ? slabFill[tone] : slabFillOff[tone] }]}
       accessibilityRole="text"
-      accessibilityLabel={
-        live
-          ? `PaySplit card, active, ${masked(card.last4)}, expires ${card.exp}`
-          : `PaySplit card, inactive, ${masked(card.last4)}`
-      }
+      accessibilityLabel={`${label}, ${title}, ${amount}, ${status}`}
     >
-      <View style={styles.cardTop}>
-        <Text style={[styles.cardBrand, !live && styles.cardIdleText]}>PaySplit</Text>
-        <Text style={[styles.cardMeta, !live && styles.cardIdleText]}>
-          {live ? card.exp : "Inactive"}
-        </Text>
+      <View style={styles.slabTop}>
+        <Text style={[styles.slabLabel, { color: quiet }]}>{label}</Text>
+        <Text style={[styles.slabStatus, { color: ink }]}>{status}</Text>
       </View>
-      {amount ? (
-        <Text style={[styles.cardAmount, !live && styles.cardIdleText]}>{amount}</Text>
-      ) : (
-        <View style={styles.cardSpacer} />
-      )}
-      <Text style={[styles.cardNumber, !live && styles.cardIdleText]}>{masked(card.last4)}</Text>
+      <Text style={[styles.slabTitle, { color: ink }]}>{title}</Text>
+      {detail ? <Text style={[styles.slabDetail, { color: quiet }]}>{detail}</Text> : null}
+      <Text style={[styles.slabAmount, { color: ink }]}>{amount}</Text>
     </View>
+  );
+}
+
+export function WalletStack({
+  cards,
+}: {
+  cards: Array<{
+    tone: SlabTone;
+    label: string;
+    title: string;
+    detail?: string;
+    amount: string;
+    status: string;
+    active?: boolean;
+  }>;
+}) {
+  return (
+    <View style={styles.stack}>
+      {cards.map((card, index) => (
+        <SettlingCard key={`${card.tone}-${card.title}`} index={index}>
+          <Slab {...card} />
+        </SettlingCard>
+      ))}
+    </View>
+  );
+}
+
+function SettlingCard({ index, children }: { index: number; children: ReactNode }) {
+  const rise = useRef(new Animated.Value(16)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(rise, {
+        toValue: 0,
+        duration: 280,
+        delay: index * 50,
+        useNativeDriver: false,
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 220,
+        delay: index * 50,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [index, opacity, rise]);
+
+  return (
+    <Animated.View
+      style={{
+        marginTop: index === 0 ? 0 : -18,
+        zIndex: index + 1,
+        opacity,
+        transform: [{ translateY: rise }],
+      }}
+    >
+      {children}
+    </Animated.View>
   );
 }
 
@@ -199,34 +273,30 @@ export function SampleLine() {
 }
 
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-    backgroundColor: colors.paper,
-  },
   screen: {
     flex: 1,
     minHeight: 0,
-    backgroundColor: colors.paper,
+    backgroundColor: colors.bg,
   },
   scrollView: {
     flex: 1,
     minHeight: 0,
     overflow: "hidden",
-    backgroundColor: colors.paper,
+    backgroundColor: colors.bg,
   },
   scroll: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 32,
+    paddingHorizontal: 22,
+    paddingTop: 8,
+    paddingBottom: 28,
   },
   footer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 22,
     paddingTop: 8,
-    backgroundColor: colors.paper,
+    backgroundColor: colors.bg,
   },
   header: {
     minHeight: 44,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -241,143 +311,122 @@ const styles = StyleSheet.create({
   backMark: {
     fontSize: 32,
     lineHeight: 34,
-    color: colors.accent,
+    color: colors.white,
     marginTop: -2,
   },
   title: {
-    fontSize: 34,
-    lineHeight: 41,
+    fontSize: 40,
+    lineHeight: 44,
     fontWeight: "700",
-    color: colors.ink,
+    letterSpacing: -0.8,
+    color: colors.white,
   },
   muted: {
-    marginTop: 4,
-    fontSize: 17,
-    lineHeight: 22,
-    color: colors.muted,
-  },
-  money: {
-    fontSize: 40,
-    lineHeight: 46,
-    fontWeight: "700",
-    color: colors.ink,
-  },
-  caption: {
-    marginTop: 2,
-    fontSize: 17,
-    lineHeight: 22,
-    color: colors.muted,
+    marginTop: 6,
+    fontSize: 14,
+    lineHeight: 18,
+    color: colors.gray,
   },
   button: {
-    minHeight: 50,
-    borderRadius: 14,
-    backgroundColor: colors.accent,
+    minHeight: 52,
+    borderRadius: 26,
+    backgroundColor: colors.cream,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 20,
     paddingVertical: 14,
   },
   pressed: {
-    opacity: 0.75,
+    opacity: 0.82,
   },
   buttonText: {
-    fontSize: 17,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: "600",
-    color: colors.paper,
+    color: colors.ink,
   },
   field: {
-    marginTop: 18,
+    marginTop: 16,
   },
   fieldLabel: {
-    marginBottom: 4,
-    fontSize: 17,
-    lineHeight: 22,
-    color: colors.ink,
+    marginBottom: 6,
+    fontSize: 14,
+    lineHeight: 18,
+    color: colors.gray,
   },
   fieldHint: {
     marginBottom: 8,
-    fontSize: 15,
-    lineHeight: 20,
-    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.gray,
   },
   inputRow: {
     minHeight: 52,
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: colors.paper,
+    backgroundColor: colors.field,
   },
   prefix: {
     fontSize: 22,
     lineHeight: 28,
-    color: colors.ink,
+    color: colors.white,
   },
   input: {
     flex: 1,
     minHeight: 52,
     fontSize: 22,
-    color: colors.ink,
+    color: colors.white,
   },
-  card: {
-    borderRadius: 16,
-    minHeight: 148,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-    justifyContent: "space-between",
+  stack: {
+    paddingTop: 4,
   },
-  cardLive: {
-    backgroundColor: colors.accent,
+  slab: {
+    minHeight: 124,
+    borderRadius: 22,
+    paddingHorizontal: 18,
+    paddingTop: 14,
+    paddingBottom: 16,
   },
-  cardIdle: {
-    backgroundColor: colors.paper,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  cardTop: {
+  slabTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  cardBrand: {
-    fontSize: 17,
-    lineHeight: 22,
+  slabLabel: {
+    fontSize: 13,
+    lineHeight: 16,
     fontWeight: "600",
-    color: colors.paper,
   },
-  cardMeta: {
-    fontSize: 15,
-    lineHeight: 20,
-    color: colors.paper,
+  slabStatus: {
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: "600",
   },
-  cardIdleText: {
-    color: colors.muted,
-  },
-  cardAmount: {
-    marginTop: 16,
-    fontSize: 34,
-    lineHeight: 40,
+  slabTitle: {
+    marginTop: 8,
+    fontSize: 26,
+    lineHeight: 30,
     fontWeight: "700",
-    color: colors.paper,
+    letterSpacing: -0.4,
   },
-  cardSpacer: {
-    height: 24,
+  slabDetail: {
+    marginTop: 2,
+    fontSize: 13,
+    lineHeight: 16,
   },
-  cardNumber: {
-    marginTop: 12,
-    fontSize: 22,
-    lineHeight: 28,
-    letterSpacing: 1.5,
-    color: colors.paper,
+  slabAmount: {
+    marginTop: 14,
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: "700",
   },
   sample: {
-    marginTop: 20,
-    fontSize: 15,
-    lineHeight: 20,
-    color: colors.muted,
+    marginTop: 18,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.gray,
   },
 });

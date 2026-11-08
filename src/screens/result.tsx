@@ -15,9 +15,9 @@ import {
   authCopy,
   colors,
   Header,
-  PaySplitCard,
   PrimaryButton,
   Screen,
+  Slab,
   Title,
   waitingCopy,
 } from "@/components/ui";
@@ -69,7 +69,14 @@ export function ResultScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
     >
       {waiting ? (
         <View testID="waiting">
-          <PaySplitCard card={trip.paySplit} amount={formatDollars(draft.cartCents)} />
+          <Slab
+            tone="paysplit"
+            label="PaySplit"
+            title={masked(trip.paySplit.last4)}
+            detail={draft.merchant}
+            amount={formatDollars(draft.cartCents)}
+            status="Fronting"
+          />
           <Text style={styles.copy}>{waitingCopy}</Text>
         </View>
       ) : null}
@@ -91,6 +98,15 @@ export function ResultScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
       ) : null}
       {declined && outcome && !outcome.ok && outcome.reason !== "inactive" ? (
         <View testID="declined">
+          <Slab
+            tone="paysplit"
+            label="PaySplit"
+            title={masked(trip.paySplit.last4)}
+            detail={draft.merchant}
+            amount="Nothing collected"
+            status="Declined"
+            active={false}
+          />
           <Text style={styles.copy}>{declineCopy(outcome.reason)}</Text>
           <Text style={styles.copy}>Nothing was collected.</Text>
         </View>
@@ -101,33 +117,34 @@ export function ResultScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
 
 const styles = StyleSheet.create({
   pad: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 22,
     paddingBottom: 8,
   },
   merchant: {
     fontSize: 22,
     lineHeight: 28,
-    fontWeight: "600",
-    color: colors.ink,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+    color: colors.white,
   },
   amount: {
     marginTop: 4,
-    fontSize: 17,
-    lineHeight: 22,
-    color: colors.ink,
+    fontSize: 14,
+    lineHeight: 18,
+    color: colors.gray,
   },
   copy: {
-    marginTop: 16,
-    fontSize: 17,
-    lineHeight: 24,
-    color: colors.ink,
+    marginTop: 14,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.gray,
   },
   section: {
-    marginTop: 24,
+    marginTop: 22,
     marginBottom: 4,
-    fontSize: 15,
-    lineHeight: 20,
-    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 16,
+    color: colors.gray,
   },
   collection: {
     minHeight: 44,
@@ -140,13 +157,13 @@ const styles = StyleSheet.create({
   },
   collectionName: {
     flex: 1,
-    fontSize: 17,
-    lineHeight: 22,
-    color: colors.ink,
+    fontSize: 16,
+    lineHeight: 20,
+    color: colors.white,
   },
   collectionAmount: {
-    fontSize: 17,
-    lineHeight: 22,
-    color: colors.ink,
+    fontSize: 16,
+    lineHeight: 20,
+    color: colors.white,
   },
 });

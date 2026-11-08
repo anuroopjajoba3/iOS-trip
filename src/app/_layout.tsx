@@ -10,8 +10,8 @@ export default function RootLayout() {
     <TripProvider>
       <View style={styles.root}>
         <View style={styles.column} testID="app-column">
-          <StatusBar style="dark" />
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper } }} />
+          <StatusBar style="light" />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
         </View>
       </View>
     </TripProvider>
@@ -22,12 +22,12 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     alignItems: "center",
-    backgroundColor: colors.paper,
+    backgroundColor: colors.bg,
   },
   column: {
     flex: 1,
     width: "100%",
     maxWidth: 440,
-    backgroundColor: colors.paper,
+    backgroundColor: colors.bg,
   },
 });

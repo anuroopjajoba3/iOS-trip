@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "iostrip",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "ios": {
       "icon": "./assets/expo.icon",
       "supportsTablet": true,
@@ -30,7 +30,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F4F1EA",
+          "backgroundColor": "#121212",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
