@@ -40,8 +40,8 @@ export function RegisterCardScreen() {
       }
       pinned={
         <View style={styles.pad}>
-          <Title>Register trip card</Title>
-          <Muted>This is your card under every trip card. Friends add theirs too. Spend splits equally, so you never front the whole trip.</Muted>
+          <Title>Your card</Title>
+          <Muted>The app makes a virtual trip card when you start a trip. Shops charge that. This is your real debit or credit card sitting under it.</Muted>
         </View>
       }
       footer={<PrimaryButton label="Save card" testID="save-card" onPress={save} />}

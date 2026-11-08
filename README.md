@@ -7,7 +7,7 @@ Merchants charge that one trip card for the full amount. Under it, every person'
 ## Use
 
 1. Sign up or log in.
-2. Register your trip card right away: credit or debit, last four, limit.
+2. Add your real debit or credit card (last four, limit). The app issues a virtual trip card when you start a trip.
 3. Start a trip: a name, then friends with the **+**. Each friend brings their own card.
 4. Pay a merchant. The trip card takes the full amount, then every card under it pays an equal share.
 5. Close the trip when it is over.
