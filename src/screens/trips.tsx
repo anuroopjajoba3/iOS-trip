@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { formatDollars, leftCents, masked, type Trip } from "@/ledger";
-import { colors, Muted, PrimaryButton, Screen, Title, WalletStack } from "@/components/ui";
+import { colors, Muted, PrimaryButton, Screen, Slab, Title, WalletStack } from "@/components/ui";
 import { useTrip } from "@/store";
 
 export function TripsScreen() {
@@ -54,7 +54,15 @@ export function TripsScreen() {
             testID="trip-row"
             onPress={() => router.push(open ? "/trip" : "/closed")}
           >
-            <TripStack trip={trip} />
+            <Slab
+              tone="trip"
+              label={trip.dates}
+              title={trip.name}
+              detail={open ? `${trip.card.name} active` : `${trip.card.name} inactive`}
+              amount={`${formatDollars(leftCents(trip))} left`}
+              status={open ? "Active" : "Inactive"}
+              active={open}
+            />
           </Pressable>
           <Muted>{open ? `${trip.card.name} active` : `${trip.card.name} inactive`}</Muted>
         </View>

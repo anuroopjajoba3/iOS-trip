@@ -2,8 +2,8 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { formatDollars, masked, type Trip } from "@/ledger";
-import { colors, Header, Muted, PrimaryButton, RowEnter, Screen, Title } from "@/components/ui";
+import { formatDollars, leftCents, masked, type Trip } from "@/ledger";
+import { colors, DatePill, Header, HeroMoney, PrimaryButton, RowEnter, Screen, Title } from "@/components/ui";
 import { FaceRow, PhotoStrip, PlaceMap, SpentChart } from "@/components/trip-extras";
 import { useTrip } from "@/store";
 import { TripStack } from "@/screens/trips";
@@ -57,7 +57,9 @@ export function TripHome({ trip }: { trip: Trip }) {
       pinned={
         <View style={styles.pinned}>
           <Title>{trip.name}</Title>
-          <Muted>{trip.dates}</Muted>
+          <DatePill>{trip.dates.toUpperCase()}</DatePill>
+          <Text style={styles.still}>STILL LEFT</Text>
+          <HeroMoney>{formatDollars(leftCents(trip))}</HeroMoney>
           <FaceRow people={trip.people} onPress={() => router.push("/share")} />
         </View>
       }
@@ -72,10 +74,8 @@ export function TripHome({ trip }: { trip: Trip }) {
         />
       }
     >
-      <TripStack trip={trip} />
       <SpentChart trip={trip} />
-      <PlaceMap place={trip.place} />
-      <PhotoStrip photos={trip.photos} onAdd={addPhoto} />
+      <TripStack trip={trip} />
       <Text style={styles.section}>Charges</Text>
       {trip.charges.map((charge, index) => (
         <RowEnter key={charge.id} index={index}>
@@ -103,6 +103,8 @@ export function TripHome({ trip }: { trip: Trip }) {
           </View>
         </RowEnter>
       ))}
+      <PlaceMap place={trip.place} />
+      <PhotoStrip photos={trip.photos} onAdd={addPhoto} />
     </Screen>
   );
 }
@@ -122,6 +124,13 @@ const styles = StyleSheet.create({
   pinned: {
     paddingHorizontal: 22,
     paddingBottom: 8,
+  },
+  still: {
+    marginTop: 4,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.8,
+    color: colors.gray,
   },
   section: {
     marginTop: 18,

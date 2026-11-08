@@ -58,7 +58,7 @@ export function SpentChart({ trip }: { trip: Trip }) {
     <View style={styles.chart}>
       <Text style={styles.section}>Spend</Text>
       <View style={styles.track}>
-        <View style={[styles.fill, { width: `${Math.min(100, (spent / max) * 100)}%`, backgroundColor: colors.trip }]} />
+        <View style={[styles.fill, { width: `${Math.min(100, (spent / max) * 100)}%`, backgroundColor: "#8567FF" }]} />
       </View>
       <Text style={styles.meta}>
         {formatDollars(spent)} spent · {formatDollars(left)} left
@@ -154,9 +154,9 @@ const styles = StyleSheet.create({
     color: colors.gray,
   },
   track: {
-    height: 10,
+    height: 7,
     borderRadius: 6,
-    backgroundColor: colors.field,
+    backgroundColor: "#30312D",
     overflow: "hidden",
   },
   fill: {

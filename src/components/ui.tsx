@@ -17,19 +17,23 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export const colors = {
-  bg: "#121212",
-  white: "#FFFFFF",
-  gray: "#8E8E93",
-  cream: "#F3EEE4",
-  ink: "#1A1A1A",
-  line: "#2A2A2A",
-  field: "#1C1C1C",
-  trip: "#F0C24B",
-  visa: "#8EAF7A",
-  mastercard: "#A9D4C2",
+  bg: "#111210",
+  white: "#F6F2E8",
+  gray: "#969A91",
+  cream: "#F4F0E6",
+  ink: "#171712",
+  line: "#30312D",
+  field: "#1B1C19",
+  trip: "#F4AD38",
+  visa: "#F4AD38",
+  mastercard: "#B9E8C9",
   tripOff: "#3A3428",
-  visaOff: "#2C3329",
+  visaOff: "#3A3428",
   mastercardOff: "#2A3330",
+  tripShadow: "#70451F",
+  visaShadow: "#6F431C",
+  mastercardShadow: "#456B52",
+  buttonShadow: "#5C5C56",
 };
 
 export const sampleCopy = "Sample only. No bank, issuer, or card is charged.";
@@ -165,6 +169,18 @@ export function Title({ children }: { children: string }) {
   return <Text style={styles.title}>{children}</Text>;
 }
 
+export function DatePill({ children }: { children: string }) {
+  return (
+    <View style={styles.datePill}>
+      <Text style={styles.datePillText}>{children}</Text>
+    </View>
+  );
+}
+
+export function HeroMoney({ children }: { children: string }) {
+  return <Text style={styles.hero}>{children}</Text>;
+}
+
 export function Muted({ children }: { children: string }) {
   return <Text style={styles.muted}>{children}</Text>;
 }
@@ -248,10 +264,16 @@ export function Slab({
   active?: boolean;
 }) {
   const ink = active ? colors.ink : "#E6E1D8";
-  const quiet = active ? "rgba(26,26,26,0.62)" : "#B7B2A8";
+  const quiet = active ? "rgba(23,23,18,0.58)" : "#B7B2A8";
+  const fill = active ? slabFill[tone] : slabFillOff[tone];
+  const ledge = active
+    ? tone === "mastercard"
+      ? colors.mastercardShadow
+      : colors.tripShadow
+    : "#2A2A26";
   return (
     <View
-      style={[styles.slab, { backgroundColor: active ? slabFill[tone] : slabFillOff[tone] }]}
+      style={[styles.slab, { backgroundColor: fill, shadowColor: ledge }]}
       accessibilityRole="text"
       accessibilityLabel={`${label}, ${title}, ${amount}, ${status}`}
     >
@@ -295,7 +317,7 @@ function SettlingCard({ index, children }: { index: number; children: ReactNode 
   return (
     <Animated.View
       style={{
-        marginTop: index === 0 ? 0 : -18,
+        marginTop: index === 0 ? 0 : 8,
         zIndex: index + 1,
         opacity: progress,
         transform: [
@@ -378,10 +400,39 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
   title: {
-    fontSize: 40,
-    lineHeight: 44,
-    fontWeight: "700",
-    letterSpacing: -0.8,
+    fontSize: 34,
+    lineHeight: 38,
+    fontWeight: "600",
+    letterSpacing: -0.7,
+    color: colors.white,
+  },
+  datePill: {
+    alignSelf: "flex-start",
+    marginTop: 14,
+    marginBottom: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 99,
+    backgroundColor: colors.trip,
+    shadowColor: colors.visaShadow,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 5,
+  },
+  datePillText: {
+    color: colors.ink,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.6,
+  },
+  hero: {
+    marginTop: 4,
+    marginBottom: 16,
+    fontSize: 52,
+    lineHeight: 56,
+    fontWeight: "500",
+    letterSpacing: -2.4,
     color: colors.white,
   },
   muted: {
@@ -392,15 +443,20 @@ const styles = StyleSheet.create({
   },
   button: {
     minHeight: 52,
-    borderRadius: 26,
+    borderRadius: 16,
     backgroundColor: colors.cream,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 20,
     paddingVertical: 14,
+    shadowColor: colors.buttonShadow,
+    shadowOffset: { width: 0, height: 7 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 7,
   },
   pressed: {
-    transform: [{ scale: 0.985 }],
+    transform: [{ translateY: 2 }, { scale: 0.985 }],
   },
   iconPressed: {
     transform: [{ scale: 0.96 }],
@@ -451,10 +507,14 @@ const styles = StyleSheet.create({
   },
   slab: {
     minHeight: 124,
-    borderRadius: 22,
+    borderRadius: 21,
     paddingHorizontal: 18,
-    paddingTop: 14,
-    paddingBottom: 16,
+    paddingTop: 16,
+    paddingBottom: 18,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 8,
   },
   slabTop: {
     flexDirection: "row",
