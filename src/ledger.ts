@@ -1,8 +1,7 @@
 /**
- * One PaySplit card takes the merchant authorization for the full cart.
+ * One Trip card takes the merchant authorization for the full cart.
  * Two funding caps must sum to that cart in exact cents, or the cart is declined.
  * A cap larger than what is left on that card declines the cart too.
- * Nothing here charges a bank, an issuer, or a real card.
  */
 
 export type FundingCard = {
@@ -26,9 +25,21 @@ export type Charge = {
   merchant: string;
   amountCents: number;
   collections: [Collection, Collection];
+  receiptUri?: string;
 };
 
-export type PaySplitCard = {
+export type Person = {
+  id: string;
+  name: string;
+};
+
+export type Photo = {
+  id: string;
+  uri: string;
+};
+
+export type IssuedCard = {
+  name: string;
   last4: string;
   exp: string;
   active: boolean;
@@ -38,11 +49,14 @@ export type Trip = {
   id: string;
   name: string;
   dates: string;
+  place: string;
   budgetCents: number;
   status: "open" | "closed";
   funding: [FundingCard, FundingCard];
-  paySplit: PaySplitCard;
+  card: IssuedCard;
   charges: Charge[];
+  people: Person[];
+  photos: Photo[];
 };
 
 export type Draft = {
@@ -109,7 +123,7 @@ export function centsToInput(cents: number): string {
  * A cap larger than what is left on that card declines the whole cart.
  */
 export function chargeTrip(trip: Trip, draft: Draft): ChargeResult {
-  if (trip.status !== "open" || !trip.paySplit.active) {
+  if (trip.status !== "open" || !trip.card.active) {
     return { ok: false, reason: "inactive" };
   }
 
@@ -158,7 +172,7 @@ export function closeTrip(trip: Trip): Trip {
   return {
     ...trip,
     status: "closed",
-    paySplit: { ...trip.paySplit, active: false },
+    card: { ...trip.card, active: false },
     funding: [
       { ...visa, active: false },
       { ...mastercard, active: false },
@@ -171,6 +185,7 @@ export function initialAustin(): Trip {
     id: "austin",
     name: "Austin",
     dates: "Nov 14–17",
+    place: "Austin",
     budgetCents: 65_000,
     status: "open",
     funding: [
@@ -191,8 +206,10 @@ export function initialAustin(): Trip {
         active: true,
       },
     ],
-    paySplit: { last4: "7714", exp: "09/28", active: true },
+    card: { name: "Trip card", last4: "7714", exp: "09/28", active: true },
     charges: [],
+    people: [],
+    photos: [],
   };
 }
 
@@ -222,8 +239,12 @@ export function austinSample(): Trip {
 export type NewTrip = {
   name: string;
   dates: string;
+  place: string;
+  cardName: string;
+  visaName: string;
   visaLast4: string;
   visaCapCents: number;
+  mastercardName: string;
   mastercardLast4: string;
   mastercardCapCents: number;
 };
@@ -236,7 +257,7 @@ export function parseLast4(value: string): string | null {
   return digits;
 }
 
-export function issuePaySplit(now = new Date()): { last4: string; exp: string } {
+export function issueCard(now = new Date()): { last4: string; exp: string } {
   const last4 = String(now.getTime() % 10_000).padStart(4, "0");
   const expDate = new Date(now);
   expDate.setFullYear(expDate.getFullYear() + 2);
@@ -245,18 +266,24 @@ export function issuePaySplit(now = new Date()): { last4: string; exp: string } 
   return { last4, exp: `${month}/${year}` };
 }
 
+export function evenSplit(cartCents: number): { visaCents: number; mastercardCents: number } {
+  const visaCents = Math.ceil(cartCents / 2);
+  return { visaCents, mastercardCents: cartCents - visaCents };
+}
+
 export function openTrip(input: NewTrip, now = new Date()): Trip {
-  const paySplit = issuePaySplit(now);
+  const issued = issueCard(now);
   return {
     id: `trip-${now.getTime()}`,
     name: input.name.trim(),
     dates: input.dates.trim(),
+    place: input.place.trim() || input.name.trim(),
     budgetCents: input.visaCapCents + input.mastercardCapCents,
     status: "open",
     funding: [
       {
         id: "visa",
-        name: "Visa",
+        name: input.visaName.trim() || "Visa",
         last4: input.visaLast4,
         capCents: input.visaCapCents,
         remainingCents: input.visaCapCents,
@@ -264,15 +291,29 @@ export function openTrip(input: NewTrip, now = new Date()): Trip {
       },
       {
         id: "mastercard",
-        name: "Mastercard",
+        name: input.mastercardName.trim() || "Mastercard",
         last4: input.mastercardLast4,
         capCents: input.mastercardCapCents,
         remainingCents: input.mastercardCapCents,
         active: true,
       },
     ],
-    paySplit: { ...paySplit, active: true },
+    card: { name: input.cardName.trim() || "Trip card", ...issued, active: true },
     charges: [],
+    people: [],
+    photos: [],
+  };
+}
+
+export function invitePerson(trip: Trip, name: string): Trip {
+  const trimmed = name.trim();
+  if (!trimmed) return trip;
+  if (trip.people.some((person) => person.name.toLowerCase() === trimmed.toLowerCase())) {
+    return trip;
+  }
+  return {
+    ...trip,
+    people: [...trip.people, { id: `person-${trip.people.length + 1}`, name: trimmed }],
   };
 }
 

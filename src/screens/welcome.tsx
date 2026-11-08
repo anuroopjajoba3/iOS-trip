@@ -16,7 +16,7 @@ export function WelcomeScreen() {
         <PrimaryButton label="Sign up" testID="sign-up" onPress={() => router.push("/signup")} />
       }
     >
-      <Text style={styles.body}>One PaySplit card. Two funding cards. You start the trip.</Text>
+      <Text style={styles.body}>Sign up. Name your trip, your cards, and who is coming.</Text>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Log in"

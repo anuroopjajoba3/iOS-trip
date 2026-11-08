@@ -1,13 +1,41 @@
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { formatDollars, masked, spentCents, type Trip } from "@/ledger";
+import { formatDollars, masked, type Trip } from "@/ledger";
 import { colors, Header, Muted, PrimaryButton, RowEnter, Screen, Title } from "@/components/ui";
+import { FaceRow, PhotoStrip, PlaceMap, SpentChart } from "@/components/trip-extras";
 import { useTrip } from "@/store";
 import { TripStack } from "@/screens/trips";
 
 export function TripHome({ trip }: { trip: Trip }) {
-  const { beginCharge, close } = useTrip();
+  const { beginCharge, close, commit } = useTrip();
+
+  async function addPhoto() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.7,
+    });
+    if (result.canceled || !result.assets[0]?.uri) return;
+    commit({
+      ...trip,
+      photos: [...trip.photos, { id: `photo-${trip.photos.length + 1}`, uri: result.assets[0].uri }],
+    });
+  }
+
+  async function addReceipt(chargeId: string) {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.7,
+    });
+    if (result.canceled || !result.assets[0]?.uri) return;
+    commit({
+      ...trip,
+      charges: trip.charges.map((charge) =>
+        charge.id === chargeId ? { ...charge, receiptUri: result.assets[0].uri } : charge,
+      ),
+    });
+  }
 
   return (
     <Screen
@@ -30,6 +58,7 @@ export function TripHome({ trip }: { trip: Trip }) {
         <View style={styles.pinned}>
           <Title>{trip.name}</Title>
           <Muted>{trip.dates}</Muted>
+          <FaceRow people={trip.people} onPress={() => router.push("/share")} />
         </View>
       }
       footer={
@@ -44,26 +73,34 @@ export function TripHome({ trip }: { trip: Trip }) {
       }
     >
       <TripStack trip={trip} />
-      <Text style={styles.meta}>
-        Budget {formatDollars(trip.budgetCents)} · Spent {formatDollars(spentCents(trip))}
-      </Text>
+      <SpentChart trip={trip} />
+      <PlaceMap place={trip.place} />
+      <PhotoStrip photos={trip.photos} onAdd={addPhoto} />
       <Text style={styles.section}>Charges</Text>
       {trip.charges.map((charge, index) => (
         <RowEnter key={charge.id} index={index}>
-        <View style={styles.charge}>
-          <View style={styles.chargeTop}>
-            <Text style={styles.merchant}>{charge.merchant}</Text>
-            <Text style={styles.amount}>{formatDollars(charge.amountCents)}</Text>
-          </View>
-          <Text style={styles.metaLine}>
-            {formatDollars(charge.amountCents)} charged on PaySplit {masked(trip.paySplit.last4)}
-          </Text>
-          {charge.collections.map((line) => (
-            <Text key={line.cardId} style={styles.metaLine}>
-              {line.name} {masked(line.last4)} {formatDollars(line.amountCents)}
+          <View style={styles.charge}>
+            <View style={styles.chargeTop}>
+              <Text style={styles.merchant}>{charge.merchant}</Text>
+              <Text style={styles.amount}>{formatDollars(charge.amountCents)}</Text>
+            </View>
+            <Text style={styles.metaLine}>
+              {formatDollars(charge.amountCents)} charged on {trip.card.name} {masked(trip.card.last4)}
             </Text>
-          ))}
-        </View>
+            {charge.collections.map((line) => (
+              <Text key={line.cardId} style={styles.metaLine}>
+                {line.name} {masked(line.last4)} {formatDollars(line.amountCents)}
+              </Text>
+            ))}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Add receipt"
+              onPress={() => addReceipt(charge.id)}
+              style={styles.receipt}
+            >
+              <Text style={styles.receiptText}>{charge.receiptUri ? "Receipt saved" : "Add receipt"}</Text>
+            </Pressable>
+          </View>
         </RowEnter>
       ))}
     </Screen>
@@ -85,12 +122,6 @@ const styles = StyleSheet.create({
   pinned: {
     paddingHorizontal: 22,
     paddingBottom: 8,
-  },
-  meta: {
-    marginTop: 16,
-    fontSize: 13,
-    lineHeight: 18,
-    color: colors.gray,
   },
   section: {
     marginTop: 18,
@@ -125,6 +156,15 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 13,
     lineHeight: 18,
+    color: colors.gray,
+  },
+  receipt: {
+    marginTop: 8,
+    minHeight: 44,
+    justifyContent: "center",
+  },
+  receiptText: {
+    fontSize: 14,
     color: colors.gray,
   },
 });

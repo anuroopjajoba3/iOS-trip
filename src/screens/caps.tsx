@@ -1,9 +1,10 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import {
   centsToInput,
+  evenSplit,
   formatDollars,
   masked,
   parseCents,
@@ -85,6 +86,23 @@ export function CapsScreen({ trip }: { trip: Trip }) {
         keyboardType="decimal-pad"
         money
       />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Split evenly"
+        onPress={() => {
+          if (cartCents == null || cartCents <= 0) {
+            setMessage("Enter the cart first.");
+            return;
+          }
+          const split = evenSplit(cartCents);
+          setVisaCap(centsToInput(split.visaCents));
+          setMcCap(centsToInput(split.mastercardCents));
+          setMessage(null);
+        }}
+        style={styles.split}
+      >
+        <Text style={styles.splitText}>Split evenly</Text>
+      </Pressable>
       <Text style={styles.sum}>
         {visaCents == null ? "—" : formatDollars(visaCents)} + {mcCents == null ? "—" : formatDollars(mcCents)} ={" "}
         {visaCents == null || mcCents == null ? "—" : formatDollars(sum)}
@@ -120,6 +138,15 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 14,
     lineHeight: 18,
+    color: colors.white,
+  },
+  split: {
+    marginTop: 8,
+    minHeight: 44,
+    justifyContent: "center",
+  },
+  splitText: {
+    fontSize: 16,
     color: colors.white,
   },
 });

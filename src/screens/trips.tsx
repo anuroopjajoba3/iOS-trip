@@ -50,13 +50,13 @@ export function TripsScreen() {
         <View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`${trip.name}, ${trip.dates}, ${formatDollars(leftCents(trip))} ${open ? "left" : "settled"}, PaySplit card ${open ? "active" : "inactive"}`}
+            accessibilityLabel={`${trip.name}, ${trip.dates}, ${formatDollars(leftCents(trip))} ${open ? "left" : "settled"}, ${trip.card.name} ${open ? "active" : "inactive"}`}
             testID="trip-row"
             onPress={() => router.push(open ? "/trip" : "/closed")}
           >
             <TripStack trip={trip} />
           </Pressable>
-          <Muted>{open ? "PaySplit card active" : "PaySplit card inactive"}</Muted>
+          <Muted>{open ? `${trip.card.name} active` : `${trip.card.name} inactive`}</Muted>
         </View>
       )}
     </Screen>
@@ -71,10 +71,10 @@ export function TripStack({ trip }: { trip: Trip }) {
     <WalletStack
       cards={[
         {
-          tone: "paysplit",
-          label: "PaySplit",
-          title: masked(trip.paySplit.last4),
-          detail: `exp ${trip.paySplit.exp}`,
+          tone: "trip",
+          label: trip.card.name,
+          title: masked(trip.card.last4),
+          detail: `exp ${trip.card.exp}`,
           amount: `${formatDollars(leftCents(trip))} left`,
           status,
           active: open,

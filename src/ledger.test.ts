@@ -118,9 +118,10 @@ test("Austin hotel then DoorDash approve, and a later mismatch collects nothing"
   assert.equal(food.trip.funding[0].remainingCents, 27_500);
   assert.equal(food.trip.funding[1].remainingCents, 17_000);
   assert.equal(leftCents(food.trip), 44_500);
-  assert.equal(food.trip.paySplit.active, true);
-  assert.equal(food.trip.paySplit.last4, "7714");
-  assert.equal(food.trip.paySplit.exp, "09/28");
+  assert.equal(food.trip.card.active, true);
+  assert.equal(food.trip.card.last4, "7714");
+  assert.equal(food.trip.card.exp, "09/28");
+  assert.equal(food.trip.card.name, "Trip card");
 
   const declined = chargeTrip(food.trip, {
     merchant: "Corner",
@@ -150,8 +151,12 @@ test("another trip is declined while one is open, and closing the trip settles t
   const nextTrip = {
     name: "Miami",
     dates: "Dec 2–5",
+    place: "Miami",
+    cardName: "Miami card",
+    visaName: "Sam Visa",
     visaLast4: "1111",
     visaCapCents: 20_000,
+    mastercardName: "Sam Mastercard",
     mastercardLast4: "2222",
     mastercardCapCents: 10_000,
   };
@@ -159,7 +164,7 @@ test("another trip is declined while one is open, and closing the trip settles t
 
   const closed = closeTrip(open);
   assert.equal(closed.status, "closed");
-  assert.equal(closed.paySplit.active, false);
+  assert.equal(closed.card.active, false);
   assert.equal(closed.funding[0].active, false);
   assert.equal(closed.funding[1].active, false);
   assert.equal(closed.funding[0].remainingCents, open.funding[0].remainingCents);
@@ -179,7 +184,8 @@ test("another trip is declined while one is open, and closing the trip settles t
   assert.equal(restarted.ok, true);
   if (!restarted.ok) return;
   assert.equal(restarted.trip.status, "open");
-  assert.equal(restarted.trip.paySplit.active, true);
+  assert.equal(restarted.trip.card.active, true);
+  assert.equal(restarted.trip.card.name, "Miami card");
   assert.equal(restarted.trip.name, "Miami");
   assert.equal(restarted.trip.funding[0].last4, "1111");
   assert.equal(restarted.trip.charges.length, 0);

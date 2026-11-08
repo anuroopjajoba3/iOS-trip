@@ -72,9 +72,9 @@ export function ResultScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
         <View testID="waiting">
           <CardArrive>
             <Slab
-              tone="paysplit"
-              label="PaySplit"
-              title={masked(trip.paySplit.last4)}
+              tone="trip"
+              label={trip.card.name}
+              title={masked(trip.card.last4)}
               detail={draft.merchant}
               amount={formatDollars(draft.cartCents)}
               status="Fronting"
@@ -103,9 +103,9 @@ export function ResultScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
         <View testID="declined">
           <CardArrive>
             <Slab
-              tone="paysplit"
-              label="PaySplit"
-              title={masked(trip.paySplit.last4)}
+              tone="trip"
+              label={trip.card.name}
+              title={masked(trip.card.last4)}
               detail={draft.merchant}
               amount="Nothing collected"
               status="Declined"

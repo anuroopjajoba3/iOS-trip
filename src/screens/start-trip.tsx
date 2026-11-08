@@ -10,8 +10,12 @@ export function StartTripScreen() {
   const { start } = useTrip();
   const [name, setName] = useState("");
   const [dates, setDates] = useState("");
+  const [place, setPlace] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [visaName, setVisaName] = useState("");
   const [visaLast4, setVisaLast4] = useState("");
   const [visaCap, setVisaCap] = useState("");
+  const [mcName, setMcName] = useState("");
   const [mcLast4, setMcLast4] = useState("");
   const [mcCap, setMcCap] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -23,10 +27,20 @@ export function StartTripScreen() {
   function save() {
     const tripName = name.trim();
     const tripDates = dates.trim();
+    const tripPlace = place.trim();
+    const issuedName = cardName.trim();
     const visa = parseLast4(visaLast4);
     const mastercard = parseLast4(mcLast4);
-    if (!tripName || !tripDates) {
-      setMessage("Enter the trip name and dates.");
+    if (!tripName || !tripDates || !tripPlace) {
+      setMessage("Enter the trip name, dates, and city.");
+      return;
+    }
+    if (!issuedName) {
+      setMessage("Name the trip card.");
+      return;
+    }
+    if (!visaName.trim() || !mcName.trim()) {
+      setMessage("Name both of your cards.");
       return;
     }
     if (!visa || !mastercard) {
@@ -40,8 +54,12 @@ export function StartTripScreen() {
     const ok = start({
       name: tripName,
       dates: tripDates,
+      place: tripPlace,
+      cardName: issuedName,
+      visaName: visaName.trim(),
       visaLast4: visa,
       visaCapCents: visaCents,
+      mastercardName: mcName.trim(),
       mastercardLast4: mastercard,
       mastercardCapCents: mcCents,
     });
@@ -55,13 +73,16 @@ export function StartTripScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Start a trip</Title>
-          <Muted>Two cards fund one PaySplit card.</Muted>
+          <Muted>Your cards. Your trip card. Your people.</Muted>
         </View>
       }
       footer={<PrimaryButton label="Open trip" testID="open-trip" onPress={save} />}
     >
       <Field label="Trip" value={name} onChangeText={setName} />
       <Field label="Dates" value={dates} onChangeText={setDates} />
+      <Field label="City" value={place} onChangeText={setPlace} />
+      <Field label="Trip card name" value={cardName} onChangeText={setCardName} />
+      <Field label="Visa name" value={visaName} onChangeText={setVisaName} />
       <Field
         label="Visa last four"
         value={visaLast4}
@@ -75,6 +96,7 @@ export function StartTripScreen() {
         keyboardType="decimal-pad"
         money
       />
+      <Field label="Mastercard name" value={mcName} onChangeText={setMcName} />
       <Field
         label="Mastercard last four"
         value={mcLast4}

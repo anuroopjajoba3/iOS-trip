@@ -24,26 +24,26 @@ export const colors = {
   ink: "#1A1A1A",
   line: "#2A2A2A",
   field: "#1C1C1C",
-  paysplit: "#F0C24B",
+  trip: "#F0C24B",
   visa: "#8EAF7A",
   mastercard: "#A9D4C2",
-  paysplitOff: "#3A3428",
+  tripOff: "#3A3428",
   visaOff: "#2C3329",
   mastercardOff: "#2A3330",
 };
 
 export const sampleCopy = "Sample only. No bank, issuer, or card is charged.";
 export const authCopy = "The merchant authorization is not split.";
-export const waitingCopy = "The full amount is being fronted on one PaySplit card.";
+export const waitingCopy = "The full amount is being fronted on one Trip card.";
 
 const slabFill = {
-  paysplit: colors.paysplit,
+  trip: colors.trip,
   visa: colors.visa,
   mastercard: colors.mastercard,
 } as const;
 
 const slabFillOff = {
-  paysplit: colors.paysplitOff,
+  trip: colors.tripOff,
   visa: colors.visaOff,
   mastercard: colors.mastercardOff,
 } as const;

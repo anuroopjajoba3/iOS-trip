@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
 import { formatDollars, masked, type Draft, type Trip } from "@/ledger";
-import { authCopy, CardArrive, colors, Header, SampleLine, Screen, Slab, Title, PrimaryButton } from "@/components/ui";
+import { authCopy, CardArrive, colors, Header, Screen, Slab, Title, PrimaryButton } from "@/components/ui";
 
 export function ChargeCardScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
   return (
@@ -15,22 +15,22 @@ export function ChargeCardScreen({ trip, draft }: { trip: Trip; draft: Draft }) 
         </View>
       }
       footer={
-        <PrimaryButton label="Charge" onPress={() => router.push("/result")} testID="charge" />
+        <PrimaryButton label="Pay" onPress={() => router.push("/result")} testID="charge" />
       }
     >
       <CardArrive>
         <Slab
-          tone="paysplit"
-          label="PaySplit"
-          title={masked(trip.paySplit.last4)}
-          detail={`exp ${trip.paySplit.exp}`}
+          tone="trip"
+          label={trip.card.name}
+          title={masked(trip.card.last4)}
+          detail={`exp ${trip.card.exp} · Apple Pay`}
           amount={formatDollars(draft.cartCents)}
-          status="Charge"
-          active={trip.paySplit.active}
+          status="Pay"
+          active={trip.card.active}
         />
       </CardArrive>
       <Text style={styles.copy}>{authCopy}</Text>
-      <SampleLine />
+      <Text style={styles.copy}>Pay with Apple Pay on the Trip card. Your Visa and Mastercard stay behind it.</Text>
     </Screen>
   );
 }

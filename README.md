@@ -1,19 +1,19 @@
 # Trip wallet
 
-One trip. One PaySplit card. Two funding cards.
+Sign up. Start your own trip. Name the trip card. Bring friends.
 
-Merchants charge that one card for the full amount. PaySplit records two collection lines. The merchant authorization is not split. Two caps must sum to the cart in exact cents, or the whole cart is declined. A cap larger than what is left on that card declines the cart too.
-
-Sign up. Start your own trip. There is no preloaded Austin demo.
-
-Merchants still only charge the PaySplit card. Money in the app is recorded on the phone. No bank, issuer, or card is charged.
+Merchants charge that one trip card for the full amount. Two funding cards sit behind it. Two caps must sum to the cart, or the whole cart is declined.
 
 ## Use
 
-1. Sign up with your name, email, and password.
-2. Start a trip: name, dates, last four of a Visa and a Mastercard, and a cap on each.
-3. Charge a merchant. Two caps must sum to the cart, or the whole cart is declined.
-4. Close the trip when it is over.
+1. Sign up or log in.
+2. Start a trip: name, dates, city, trip card name, and your Visa and Mastercard.
+3. Invite people and share.
+4. Add photos, receipts, and a map of the city.
+5. Pay a merchant. Split caps evenly, or type them. Apple Pay is the confirm step on the trip card.
+6. Close the trip when it is over.
+
+Live bank rails and a real Apple Pay merchant ID are not connected yet. The trip still records the charge on the phone.
 
 ## Build the iPhone app
 
@@ -27,20 +27,3 @@ git checkout cursor/ios-trip-wallet-7340
 npm install
 npm run ios:release
 ```
-
-That puts **Trip Wallet** on the Simulator as a real app. It does not need Metro or a QR code.
-
-To install on a plugged-in iPhone:
-
-```bash
-npm run ios:device
-```
-
-Xcode will ask you to sign with your Apple ID. A free Apple ID works for your own phone. TestFlight and the App Store need a paid Apple Developer account, then:
-
-```bash
-npx eas-cli login
-npx eas-cli build --platform ios --profile preview
-```
-
-`preview` makes an installable iOS build. `production` is the App Store build. Money in the app is still sample only. No bank is charged.

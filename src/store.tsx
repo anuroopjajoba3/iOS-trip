@@ -2,7 +2,21 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { digestStringAsync, CryptoDigestAlgorithm } from "expo-crypto";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
-import { closeTrip, startTrip, type Draft, type NewTrip, type Trip } from "@/ledger";
+import { closeTrip, invitePerson, startTrip, type Draft, type NewTrip, type Trip } from "@/ledger";
+
+function asTrip(value: Trip | null): Trip | null {
+  if (!value) return null;
+  const legacy = value as Trip & { paySplit?: { last4: string; exp: string; active: boolean } };
+  const card = value.card ?? (legacy.paySplit ? { name: "Trip card", ...legacy.paySplit } : undefined);
+  if (!card) return value;
+  return {
+    ...value,
+    card,
+    place: value.place ?? value.name,
+    people: value.people ?? [],
+    photos: value.photos ?? [],
+  };
+}
 
 const storageKey = "trip-wallet-accounts-v1";
 
@@ -63,7 +77,13 @@ export function TripProvider({ children }: { children: ReactNode }) {
       .then((raw) => {
         if (cancelled || !raw) return;
         const parsed = JSON.parse(raw) as Snapshot;
-        setAccounts(parsed.accounts ?? {});
+        const accounts = Object.fromEntries(
+          Object.entries(parsed.accounts ?? {}).map(([email, account]) => [
+            email,
+            { ...account, trip: asTrip(account.trip) },
+          ]),
+        );
+        setAccounts(accounts);
         setSession(parsed.session ?? null);
       })
       .catch(() => undefined)
@@ -108,7 +128,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         }
         setNotice(null);
         setDraft(null);
-        writeTrip(result.trip);
+        writeTrip(user ? invitePerson(result.trip, user.name) : result.trip);
         return true;
       },
       close: () => {
