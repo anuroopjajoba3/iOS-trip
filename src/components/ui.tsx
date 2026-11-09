@@ -35,6 +35,7 @@ export const colors = {
   mastercardShadow: "rgba(0,0,0,0.06)",
   buttonShadow: "rgba(0,0,0,0.04)",
   blue: "#007AFF",
+  green: "#12B76A",
   cardInk: "#F5F5F7",
 };
 

@@ -185,13 +185,13 @@ export function StatTiles({
   return (
     <View style={styles.tiles}>
       <View style={styles.tile}>
-        <Text style={styles.tileTitle}>Cashback</Text>
+        <Text style={styles.tileTitle}>Left</Text>
         <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Lifetime</Text>
+          <Text style={styles.statLabel}>On cards</Text>
           <Text style={styles.statValue}>{formatDollars(leftoverCents)}</Text>
         </View>
         <View style={styles.statRow}>
-          <Text style={styles.statLabel}>This week</Text>
+          <Text style={styles.statLabel}>Spent</Text>
           <Text style={styles.statBlue}>{formatDollars(spentCents)}</Text>
         </View>
       </View>
@@ -201,7 +201,7 @@ export function StatTiles({
         onPress={() => Linking.openURL(`https://maps.apple.com/?q=${encodeURIComponent(place)}`)}
         style={styles.tile}
       >
-        <Text style={styles.tileTitle}>Find ATMs</Text>
+        <Text style={styles.tileTitle}>Map</Text>
         <View style={styles.mapPreview}>
           <View style={[styles.mapRoad, styles.mapRoadA]} />
           <View style={[styles.mapRoad, styles.mapRoadB]} />
@@ -268,24 +268,56 @@ function TabIcon({ children, active, badge }: { children: ReactNode; active?: bo
   );
 }
 
+export function CardPeek({
+  card,
+  onPress,
+  testID,
+}: {
+  card: IssuedCard;
+  onPress: () => void;
+  testID?: string;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${card.name} *${card.last4}`}
+      testID={testID}
+      onPress={onPress}
+      style={styles.peekStack}
+    >
+      <View style={styles.peekBack} />
+      <View style={styles.peekFront}>
+        <CardEtching />
+        <View style={styles.virtualBadge}>
+          <Text style={styles.virtualBadgeText}>Virtual</Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
 export function TabBar({
   onHome,
   onSearch,
   onPay,
   onAlerts,
   onChat,
+  homeActive = true,
+  payTestID = "new-charge",
 }: {
   onHome: () => void;
   onSearch: () => void;
   onPay: () => void;
   onAlerts: () => void;
   onChat: () => void;
+  homeActive?: boolean;
+  payTestID?: string | null;
 }) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
       <Pressable accessibilityRole="button" accessibilityLabel="Home" onPress={onHome} style={styles.tab}>
-        <TabIcon active>
+        <TabIcon active={homeActive}>
           <View style={styles.homeIcon}>
             <View style={styles.homeRoof} />
             <View style={styles.homeBody} />
@@ -303,7 +335,7 @@ export function TabBar({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="New charge"
-        testID="new-charge"
+        testID={payTestID ?? undefined}
         onPress={onPay}
         style={styles.tab}
       >
@@ -380,6 +412,33 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 18,
     borderBottomLeftRadius: 18,
     backgroundColor: "#E4E4EA",
+  },
+  peekStack: {
+    height: 92,
+    marginTop: 8,
+    overflow: "hidden",
+  },
+  peekBack: {
+    position: "absolute",
+    left: 18,
+    right: 18,
+    top: 10,
+    height: 88,
+    borderRadius: 22,
+    backgroundColor: "#2A2A2E",
+    transform: [{ rotate: "4deg" }],
+  },
+  peekFront: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 18,
+    height: 188,
+    borderRadius: 22,
+    backgroundColor: "#161616",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    overflow: "hidden",
   },
   card: {
     minHeight: 196,

@@ -47,7 +47,7 @@ export function TripHome({ trip }: { trip: Trip }) {
       header={<CloseHeader title="Trip card" onClose={() => router.replace("/")} />}
       footer={
         <TabBar
-          onHome={() => {}}
+          onHome={() => router.replace("/")}
           onSearch={() => router.replace("/")}
           onPay={() => {
             beginCharge();
