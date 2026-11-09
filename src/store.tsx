@@ -6,6 +6,7 @@ import {
   closeTrip,
   issueTripCard,
   makeRegisteredCard,
+  panEndingIn,
   startTrip,
   type Draft,
   type IssuedCard,
@@ -19,8 +20,11 @@ function asPerson(
   person: { id: string; name: string; card?: RegisteredCard },
   fallback?: RegisteredCard,
 ): Person {
-  if (person.card?.last4) {
-    return { id: person.id, name: person.name, card: person.card };
+  if (person.card?.pan || person.card?.last4) {
+    const card = person.card.pan
+      ? person.card
+      : makeRegisteredCard(person.card.kind ?? "debit", person.card.last4, person.card.limitCents ?? 0);
+    return { id: person.id, name: person.name, card };
   }
   return {
     id: person.id,
@@ -46,7 +50,15 @@ function asTrip(value: Trip | null): Trip | null {
   });
   return {
     ...value,
-    card: { ...card, name: card.name || "Trip card", kind: card.kind ?? "debit" },
+    card: {
+      ...card,
+      name: card.name || "Trip card",
+      kind: card.kind ?? "debit",
+      pan: card.pan ?? panEndingIn(card.last4 || "0000"),
+      last4: card.last4 || (card.pan ? card.pan.slice(-4) : "0000"),
+      cvv: card.cvv ?? "000",
+      inWallet: card.inWallet ?? false,
+    },
     place: value.place ?? value.name,
     people,
     photos: value.photos ?? [],
@@ -57,7 +69,7 @@ function asTrip(value: Trip | null): Trip | null {
   };
 }
 
-const storageKey = "trip-wallet-accounts-v4";
+const storageKey = "trip-wallet-accounts-v5";
 
 export type User = {
   name: string;
@@ -94,6 +106,7 @@ type TripStore = {
   signUp: (name: string, email: string, password: string) => Promise<string | null>;
   logIn: (email: string, password: string) => Promise<string | null>;
   acceptTripCard: () => void;
+  addToWallet: () => void;
   logOut: () => void;
 };
 
@@ -250,6 +263,10 @@ export function TripProvider({ children }: { children: ReactNode }) {
         return null;
       },
       acceptTripCard: () => writeAccount({ revealedTripCard: true }),
+      addToWallet: () => {
+        if (!account?.tripCard) return;
+        writeAccount({ tripCard: { ...account.tripCard, inWallet: true } });
+      },
       logOut: () => {
         setSession(null);
         setDraft(null);

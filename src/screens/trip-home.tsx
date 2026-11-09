@@ -2,7 +2,7 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { cardLabel, formatDollars, leftCents, masked, type Trip } from "@/ledger";
+import { cardLabel, formatDollars, formatPan, leftCents, type Trip } from "@/ledger";
 import { colors, Header, HeroMoney, PrimaryButton, RowEnter, Screen, Title } from "@/components/ui";
 import { FaceRow, PhotoStrip, PlaceMap, SpentChart } from "@/components/trip-extras";
 import { useTrip } from "@/store";
@@ -81,7 +81,7 @@ export function TripHome({ trip }: { trip: Trip }) {
             <Text style={styles.personLeft}>{formatDollars(person.card.remainingCents)}</Text>
           </View>
           <Text style={styles.metaLine}>
-            {cardLabel(person.card.kind)} {masked(person.card.last4)}
+            {cardLabel(person.card.kind)} {formatPan(person.card.pan)}
           </Text>
         </View>
       ))}
@@ -96,11 +96,11 @@ export function TripHome({ trip }: { trip: Trip }) {
               <Text style={styles.amount}>{formatDollars(charge.amountCents)}</Text>
             </View>
             <Text style={styles.metaLine}>
-              {formatDollars(charge.amountCents)} charged on {trip.card.name} {masked(trip.card.last4)}
+              {formatDollars(charge.amountCents)} charged on {trip.card.name} {formatPan(trip.card.pan)}
             </Text>
             {charge.collections.map((line) => (
               <Text key={line.personId} style={styles.metaLine}>
-                {line.name} {masked(line.last4)} {formatDollars(line.amountCents)}
+                {line.name} ····{line.last4} {formatDollars(line.amountCents)}
               </Text>
             ))}
             <Pressable

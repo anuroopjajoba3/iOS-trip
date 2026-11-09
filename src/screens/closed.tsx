@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
-import { formatDollars, masked, type Trip } from "@/ledger";
+import { formatDollars, type Trip } from "@/ledger";
 import { colors, Muted, PrimaryButton, RowEnter, SampleLine, Screen, Title } from "@/components/ui";
 import { TripStack } from "@/screens/trips";
 
@@ -30,7 +30,7 @@ export function ClosedScreen({ trip }: { trip: Trip }) {
           </View>
           {charge.collections.map((line) => (
             <Text key={line.personId} style={styles.meta}>
-              {line.name} {masked(line.last4)} {formatDollars(line.amountCents)}
+              {line.name} ····{line.last4} {formatDollars(line.amountCents)}
             </Text>
           ))}
         </View>

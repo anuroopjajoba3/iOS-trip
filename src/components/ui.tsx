@@ -245,6 +245,7 @@ export function Field({
   money,
   secure,
   testID,
+  maxLength,
 }: {
   label: string;
   value: string;
@@ -254,6 +255,7 @@ export function Field({
   money?: boolean;
   secure?: boolean;
   testID?: string;
+  maxLength?: number;
 }) {
   return (
     <View style={styles.field}>
@@ -270,11 +272,39 @@ export function Field({
           autoCapitalize={keyboardType === "email-address" || money || secure ? "none" : "words"}
           placeholderTextColor={colors.gray}
           selectionColor={colors.cream}
-          style={styles.input}
+          style={[styles.input, maxLength && maxLength > 10 ? styles.inputPan : null]}
           testID={testID}
+          maxLength={maxLength}
         />
       </View>
     </View>
+  );
+}
+
+export function WalletButton({
+  added,
+  onPress,
+}: {
+  added: boolean;
+  onPress: () => void;
+}) {
+  if (added) {
+    return (
+      <View style={styles.walletAdded} testID="wallet-added">
+        <Text style={styles.walletAddedText}>In Apple Wallet</Text>
+      </View>
+    );
+  }
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Add to Apple Wallet"
+      testID="add-to-wallet"
+      onPress={onPress}
+      style={({ pressed }) => [styles.wallet, pressed && styles.pressed]}
+    >
+      <Text style={styles.walletText}>Add to Apple Wallet</Text>
+    </Pressable>
   );
 }
 
@@ -534,6 +564,41 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: colors.white,
   },
+  inputPan: {
+    fontSize: 18,
+    letterSpacing: 0.6,
+  },
+  wallet: {
+    marginTop: 16,
+    minHeight: 52,
+    borderRadius: 14,
+    backgroundColor: "#000000",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+  walletText: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  walletAdded: {
+    marginTop: 16,
+    minHeight: 52,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.line,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+  walletAddedText: {
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "600",
+    color: colors.white,
+  },
   stack: {
     paddingTop: 4,
   },
@@ -565,8 +630,8 @@ const styles = StyleSheet.create({
   },
   slabTitle: {
     marginTop: 8,
-    fontSize: 26,
-    lineHeight: 30,
+    fontSize: 22,
+    lineHeight: 26,
     fontWeight: "700",
     letterSpacing: -0.4,
   },

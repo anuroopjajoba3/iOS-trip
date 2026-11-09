@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { formatDollars, leftCents, masked, type Trip } from "@/ledger";
+import { formatDollars, formatPan, leftCents, type Trip } from "@/ledger";
 import { colors, Muted, PrimaryButton, Screen, Slab, Title, WalletStack } from "@/components/ui";
 import { useTrip } from "@/store";
 
@@ -79,7 +79,7 @@ export function TripStack({ trip }: { trip: Trip }) {
         {
           tone: "trip",
           label: trip.card.name,
-          title: masked(trip.card.last4),
+          title: formatPan(trip.card.pan),
           detail: `exp ${trip.card.exp}`,
           amount: `${formatDollars(leftCents(trip))} left`,
           status: open ? "Active" : "Inactive",

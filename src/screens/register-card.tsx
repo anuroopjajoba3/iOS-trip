@@ -1,12 +1,12 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { masked } from "@/ledger";
-import { CardArrive, colors, Muted, PrimaryButton, Screen, Slab, Title } from "@/components/ui";
+import { formatPan } from "@/ledger";
+import { CardArrive, colors, Muted, PrimaryButton, sampleCopy, Screen, Slab, Title, WalletButton } from "@/components/ui";
 import { useTrip } from "@/store";
 
 export function RegisterCardScreen() {
-  const { user, acceptTripCard, logOut } = useTrip();
+  const { user, acceptTripCard, addToWallet, logOut } = useTrip();
   const tripCard = user?.tripCard;
 
   function continueOn() {
@@ -27,7 +27,7 @@ export function RegisterCardScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Your trip card</Title>
-          <Muted>Trip Wallet made this virtual card for you. Shops charge this number. You do not type it in.</Muted>
+          <Muted>Trip Wallet issued this 16-digit virtual card. Add it to Apple Wallet, then pay with Apple Pay.</Muted>
         </View>
       }
       footer={<PrimaryButton label="Continue" testID="continue-trip-card" onPress={continueOn} />}
@@ -37,16 +37,17 @@ export function RegisterCardScreen() {
           <Slab
             tone="trip"
             label={tripCard.name}
-            title={masked(tripCard.last4)}
-            detail={`exp ${tripCard.exp} · Apple Pay`}
-            amount="Virtual"
-            status="Ready"
+            title={formatPan(tripCard.pan)}
+            detail={`exp ${tripCard.exp} · cvv ${tripCard.cvv}`}
+            amount={tripCard.inWallet ? "Apple Wallet" : "Virtual"}
+            status={tripCard.inWallet ? "Wallet" : "Ready"}
             active={tripCard.active}
           />
         </CardArrive>
       ) : null}
+      {tripCard ? <WalletButton added={tripCard.inWallet} onPress={addToWallet} /> : null}
       <Text style={styles.copy}>
-        When you start a trip, you and up to five friends put real debit or credit cards under this one. Spend splits equally.
+        A live card needs a bank BIN, a card issuer, and Apple in-app provisioning. This phone records the card and the Wallet add. {sampleCopy}
       </Text>
     </Screen>
   );

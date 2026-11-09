@@ -9,6 +9,7 @@ export type CardKind = "credit" | "debit";
 
 export type RegisteredCard = {
   kind: CardKind;
+  pan: string;
   last4: string;
   limitCents: number;
   remainingCents: number;
@@ -45,8 +46,11 @@ export type Photo = {
 export type IssuedCard = {
   name: string;
   kind: CardKind;
+  pan: string;
   last4: string;
+  cvv: string;
   exp: string;
+  inWallet: boolean;
   active: boolean;
 };
 
@@ -107,6 +111,52 @@ export function masked(last4: string): string {
   return `····${last4}`;
 }
 
+export function digitsOnly(value: string): string {
+  return value.replace(/\D/g, "");
+}
+
+export function formatPan(pan: string): string {
+  return digitsOnly(pan).replace(/(\d{4})(?=\d)/g, "$1 ").trim();
+}
+
+export function luhn(pan: string): boolean {
+  const digits = digitsOnly(pan);
+  if (digits.length < 12) return false;
+  let sum = 0;
+  let doubleIt = false;
+  for (let index = digits.length - 1; index >= 0; index -= 1) {
+    let n = Number(digits[index]);
+    if (doubleIt) {
+      n *= 2;
+      if (n > 9) n -= 9;
+    }
+    sum += n;
+    doubleIt = !doubleIt;
+  }
+  return sum % 10 === 0;
+}
+
+/** 16-digit PAN, Luhn-valid. Spaces allowed. */
+export function parsePan(value: string): string | null {
+  const digits = digitsOnly(value);
+  if (!/^\d{16}$/.test(digits) || !luhn(digits)) {
+    return null;
+  }
+  return digits;
+}
+
+export function panEndingIn(last4: string, bin = "400000"): string {
+  const tail = last4.replace(/\D/g, "").slice(-4).padStart(4, "0");
+  for (let i = 0; i < 1_000_000; i += 1) {
+    const mid = String(i).padStart(6, "0");
+    const pan = `${bin}${mid}${tail}`;
+    if (pan.length === 16 && luhn(pan) && pan.slice(-4) === tail) {
+      return pan;
+    }
+  }
+  throw new Error("Could not build a card number.");
+}
+
 export function formatDollars(cents: number): string {
   const negative = cents < 0;
   const absolute = Math.abs(Math.trunc(cents));
@@ -134,7 +184,9 @@ export function centsToInput(cents: number): string {
 }
 
 export function parseLast4(value: string): string | null {
-  const digits = value.trim();
+  const pan = parsePan(value);
+  if (pan) return pan.slice(-4);
+  const digits = digitsOnly(value);
   if (!/^\d{4}$/.test(digits)) {
     return null;
   }
@@ -151,13 +203,19 @@ export function issueCard(now = new Date()): { exp: string } {
 
 export function makeRegisteredCard(
   kind: CardKind,
-  last4: string,
+  panOrLast4: string,
   limitCents: number,
   now = new Date(),
 ): RegisteredCard {
+  const digits = digitsOnly(panOrLast4);
+  const pan = parsePan(panOrLast4) ?? (digits.length === 4 ? panEndingIn(digits) : null);
+  if (!pan) {
+    throw new Error("Enter a 16-digit card number.");
+  }
   return {
     kind,
-    last4,
+    pan,
+    last4: pan.slice(-4),
     limitCents,
     remainingCents: limitCents,
     exp: issueCard(now).exp,
@@ -236,12 +294,14 @@ export function closeTrip(trip: Trip): Trip {
 }
 
 function samplePerson(id: string, name: string, last4: string, kind: CardKind): Person {
+  const pan = panEndingIn(last4);
   return {
     id,
     name,
     card: {
       kind,
-      last4,
+      pan,
+      last4: pan.slice(-4),
       limitCents: 13_000,
       remainingCents: 13_000,
       exp: "09/28",
@@ -259,7 +319,16 @@ export function initialAustin(): Trip {
     place: "Austin",
     budgetCents: 65_000,
     status: "open",
-    card: { name: "Trip card", kind: "debit", last4: "7714", exp: "09/28", active: true },
+    card: {
+      name: "Trip card",
+      kind: "debit",
+      pan: panEndingIn("7714"),
+      last4: "7714",
+      cvv: "314",
+      exp: "09/28",
+      inWallet: true,
+      active: true,
+    },
     charges: [],
     people: [
       samplePerson("person-1", "Jordan", "4242", "debit"),
@@ -293,11 +362,16 @@ export function austinSample(): Trip {
 
 export function issueTripCard(now = new Date()): IssuedCard {
   const last4 = String((now.getTime() % 9000) + 1000).padStart(4, "0");
+  const pan = panEndingIn(last4);
+  const cvv = String((now.getTime() % 900) + 100).padStart(3, "0");
   return {
     name: "Trip card",
     kind: "debit",
-    last4,
+    pan,
+    last4: pan.slice(-4),
+    cvv,
     exp: issueCard(now).exp,
+    inWallet: false,
     active: true,
   };
 }

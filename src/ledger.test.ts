@@ -8,14 +8,31 @@ import {
   declineCopy,
   equalShares,
   formatDollars,
+  formatPan,
   initialAustin,
   invitePerson,
   issueTripCard,
   leftCents,
+  luhn,
   makeRegisteredCard,
   maxPeople,
+  parsePan,
   startTrip,
 } from "./ledger";
+
+test("a trip card is a 16-digit Luhn number, shown in full", () => {
+  assert.equal(parsePan("4242 4242 4242 4242"), "4242424242424242");
+  assert.equal(parsePan("4242424242424241"), null);
+  assert.equal(formatPan("4242424242424242"), "4242 4242 4242 4242");
+  const issued = issueTripCard(new Date("2026-11-08"));
+  assert.equal(issued.pan.length, 16);
+  assert.equal(luhn(issued.pan), true);
+  assert.equal(issued.pan.slice(-4), issued.last4);
+  assert.equal(issued.inWallet, false);
+  const funded = makeRegisteredCard("credit", "5555555555554444", 20_000);
+  assert.equal(funded.pan, "5555555555554444");
+  assert.equal(funded.last4, "4444");
+});
 
 test("equal shares cover the cart, leftover cents go first", () => {
   assert.deepEqual(equalShares(2_500, 5), [500, 500, 500, 500, 500]);
@@ -104,6 +121,8 @@ test("Austin hotel then DoorDash split equally, a later overage collects nothing
   assert.equal(leftCents(food.trip), 44_500);
   assert.equal(food.trip.card.active, true);
   assert.equal(food.trip.card.last4, "7714");
+  assert.equal(food.trip.card.pan.slice(-4), "7714");
+  assert.equal(food.trip.card.pan.length, 16);
   assert.equal(food.trip.card.name, "Trip card");
   assert.equal(food.trip.people.length, 5);
 

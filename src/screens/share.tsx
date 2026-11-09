@@ -4,12 +4,12 @@ import { Pressable, Share, StyleSheet, Text, View } from "react-native";
 import {
   cardLabel,
   invitePerson,
+  formatPan,
   makeRegisteredCard,
-  masked,
   maxFriends,
   maxPeople,
   parseCents,
-  parseLast4,
+  parsePan,
   type CardKind,
 } from "@/ledger";
 import { colors, Field, Header, KindToggle, Muted, PrimaryButton, Screen, Title } from "@/components/ui";
@@ -20,7 +20,7 @@ export function ShareScreen() {
   const { trip, commit } = useTrip();
   const [name, setName] = useState("");
   const [kind, setKind] = useState<CardKind>("debit");
-  const [last4, setLast4] = useState("");
+  const [pan, setPan] = useState("");
   const [limit, setLimit] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   if (!trip) return null;
@@ -32,14 +32,14 @@ export function ShareScreen() {
       setMessage("Five friends on this trip card.");
       return;
     }
-    const digits = parseLast4(last4);
+    const digits = parsePan(pan);
     const limitCents = parseCents(limit);
     if (!name.trim()) {
       setMessage("Enter a name to invite.");
       return;
     }
     if (!digits) {
-      setMessage("Enter the last four digits.");
+      setMessage("Enter their 16-digit card number.");
       return;
     }
     if (limitCents == null || limitCents <= 0) {
@@ -53,7 +53,7 @@ export function ShareScreen() {
     }
     commit(next);
     setName("");
-    setLast4("");
+    setPan("");
     setLimit("");
     setKind("debit");
     setMessage(null);
@@ -86,7 +86,7 @@ export function ShareScreen() {
         <View key={person.id} style={styles.person}>
           <Text style={styles.personName}>{person.name}</Text>
           <Text style={styles.personMeta}>
-            {cardLabel(person.card.kind)} {masked(person.card.last4)}
+            {cardLabel(person.card.kind)} {formatPan(person.card.pan)}
           </Text>
         </View>
       ))}
@@ -97,7 +97,13 @@ export function ShareScreen() {
           <Field label="Invite" value={name} onChangeText={setName} />
           <Text style={styles.label}>Their card</Text>
           <KindToggle kind={kind} onChange={setKind} />
-          <Field label="Last four" value={last4} onChangeText={setLast4} keyboardType="number-pad" />
+          <Field
+            label="Card number"
+            value={pan}
+            onChangeText={(value) => setPan(formatPan(value))}
+            keyboardType="number-pad"
+            maxLength={19}
+          />
           <Field label="Limit" value={limit} onChangeText={setLimit} keyboardType="decimal-pad" money />
           <Pressable
             accessibilityRole="button"

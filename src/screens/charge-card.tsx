@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
-import { equalShares, formatDollars, masked, type Draft, type Trip } from "@/ledger";
+import { equalShares, formatDollars, formatPan, type Draft, type Trip } from "@/ledger";
 import { authCopy, CardArrive, colors, Header, Screen, Slab, Title, PrimaryButton } from "@/components/ui";
 
 export function ChargeCardScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
@@ -24,8 +24,8 @@ export function ChargeCardScreen({ trip, draft }: { trip: Trip; draft: Draft }) 
         <Slab
           tone="trip"
           label={trip.card.name}
-          title={masked(trip.card.last4)}
-          detail={`exp ${trip.card.exp} · Apple Pay`}
+          title={formatPan(trip.card.pan)}
+          detail={`exp ${trip.card.exp} · ${trip.card.inWallet ? "Apple Wallet" : "Apple Pay"}`}
           amount={formatDollars(draft.cartCents)}
           status="Pay"
           active={trip.card.active}
@@ -35,7 +35,7 @@ export function ChargeCardScreen({ trip, draft }: { trip: Trip; draft: Draft }) 
       {trip.people.map((person, index) => (
         <View key={person.id} style={styles.row}>
           <Text style={styles.name}>
-            {person.name} {masked(person.card.last4)}
+            {person.name} {formatPan(person.card.pan)}
           </Text>
           <Text style={styles.amount}>{formatDollars(shares[index] ?? 0)}</Text>
         </View>

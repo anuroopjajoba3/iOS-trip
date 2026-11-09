@@ -6,7 +6,7 @@ import {
   chargeTrip,
   declineCopy,
   formatDollars,
-  masked,
+  formatPan,
   type ChargeResult,
   type Draft,
   type Trip,
@@ -74,7 +74,7 @@ export function ResultScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
             <Slab
               tone="trip"
               label={trip.card.name}
-              title={masked(trip.card.last4)}
+              title={formatPan(trip.card.pan)}
               detail={draft.merchant}
               amount={formatDollars(draft.cartCents)}
               status="Splitting"
@@ -92,7 +92,7 @@ export function ResultScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
             {outcome.collections.map((line) => (
             <View key={line.personId} style={styles.collection}>
               <Text style={styles.collectionName}>
-                {line.name} {masked(line.last4)}
+                {line.name} ····{line.last4}
               </Text>
               <Text style={styles.collectionAmount}>{formatDollars(line.amountCents)}</Text>
             </View>
@@ -105,7 +105,7 @@ export function ResultScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
             <Slab
               tone="trip"
               label={trip.card.name}
-              title={masked(trip.card.last4)}
+              title={formatPan(trip.card.pan)}
               detail={draft.merchant}
               amount="Nothing collected"
               status="Declined"

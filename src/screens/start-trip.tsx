@@ -4,11 +4,11 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import {
   cardLabel,
+  formatPan,
   makeRegisteredCard,
-  masked,
   maxFriends,
   parseCents,
-  parseLast4,
+  parsePan,
   type CardKind,
   type TripFriend,
 } from "@/ledger";
@@ -20,11 +20,11 @@ export function StartTripScreen() {
   const { start, user } = useTrip();
   const [name, setName] = useState("");
   const [ownerKind, setOwnerKind] = useState<CardKind>("debit");
-  const [ownerLast4, setOwnerLast4] = useState("");
+  const [ownerPan, setOwnerPan] = useState("");
   const [ownerLimit, setOwnerLimit] = useState("");
   const [friendName, setFriendName] = useState("");
   const [kind, setKind] = useState<CardKind>("debit");
-  const [last4, setLast4] = useState("");
+  const [friendPan, setFriendPan] = useState("");
   const [limit, setLimit] = useState("");
   const [friends, setFriends] = useState<TripFriend[]>([]);
   const [message, setMessage] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export function StartTripScreen() {
 
   function addFriend() {
     const nextName = friendName.trim();
-    const digits = parseLast4(last4);
+    const digits = parsePan(friendPan);
     const limitCents = parseCents(limit);
     if (!nextName) {
       setMessage("Enter a name.");
@@ -54,7 +54,7 @@ export function StartTripScreen() {
       return;
     }
     if (!digits) {
-      setMessage("Enter the last four digits.");
+      setMessage("Enter their 16-digit card number.");
       return;
     }
     if (limitCents == null || limitCents <= 0) {
@@ -63,7 +63,7 @@ export function StartTripScreen() {
     }
     setFriends([...friends, { name: nextName, card: makeRegisteredCard(kind, digits, limitCents) }]);
     setFriendName("");
-    setLast4("");
+    setFriendPan("");
     setLimit("");
     setKind("debit");
     setMessage(null);
@@ -71,14 +71,14 @@ export function StartTripScreen() {
 
   function save() {
     const tripName = name.trim();
-    const digits = parseLast4(ownerLast4);
+    const digits = parsePan(ownerPan);
     const limitCents = parseCents(ownerLimit);
     if (!tripName) {
       setMessage("Enter a trip name.");
       return;
     }
     if (!digits) {
-      setMessage("Enter the last four of your card.");
+      setMessage("Enter your 16-digit card number.");
       return;
     }
     if (limitCents == null || limitCents <= 0) {
@@ -90,8 +90,8 @@ export function StartTripScreen() {
     router.replace("/trip");
   }
 
-  const ownerPreview = parseLast4(ownerLast4)
-    ? makeRegisteredCard(ownerKind, ownerLast4, parseCents(ownerLimit) ?? 0)
+  const ownerPreview = parsePan(ownerPan)
+    ? makeRegisteredCard(ownerKind, ownerPan, parseCents(ownerLimit) ?? 0)
     : null;
   const faces = [
     { id: "you", name: ownerName, card: ownerPreview ?? makeRegisteredCard("debit", "0000", 0) },
@@ -115,10 +115,10 @@ export function StartTripScreen() {
           <Slab
             tone="trip"
             label={tripCard.name}
-            title={masked(tripCard.last4)}
-            detail={`exp ${tripCard.exp}`}
-            amount="Virtual"
-            status="Ready"
+            title={formatPan(tripCard.pan)}
+            detail={`exp ${tripCard.exp}${tripCard.inWallet ? " · Apple Wallet" : ""}`}
+            amount={tripCard.inWallet ? "Apple Wallet" : "Virtual"}
+            status={tripCard.inWallet ? "Wallet" : "Ready"}
             active
           />
         </View>
@@ -126,11 +126,12 @@ export function StartTripScreen() {
       <Text style={styles.section}>Your card under it</Text>
       <KindToggle kind={ownerKind} onChange={setOwnerKind} />
       <Field
-        label="Last four"
-        value={ownerLast4}
-        onChangeText={setOwnerLast4}
+        label="Card number"
+        value={ownerPan}
+        onChangeText={(value) => setOwnerPan(formatPan(value))}
         keyboardType="number-pad"
-        testID="owner-last4"
+        testID="owner-pan"
+        maxLength={19}
       />
       <Field
         label="Limit"
@@ -146,7 +147,7 @@ export function StartTripScreen() {
         <View key={`${friend.name}-${index}`} style={styles.person}>
           <Text style={styles.personName}>{friend.name}</Text>
           <Text style={styles.personMeta}>
-            {cardLabel(friend.card.kind)} {masked(friend.card.last4)}
+            {cardLabel(friend.card.kind)} {formatPan(friend.card.pan)}
           </Text>
         </View>
       ))}
@@ -169,7 +170,14 @@ export function StartTripScreen() {
           </View>
           <Text style={styles.label}>Their card</Text>
           <KindToggle kind={kind} onChange={setKind} />
-          <Field label="Last four" value={last4} onChangeText={setLast4} keyboardType="number-pad" testID="friend-last4" />
+          <Field
+            label="Card number"
+            value={friendPan}
+            onChangeText={(value) => setFriendPan(formatPan(value))}
+            keyboardType="number-pad"
+            testID="friend-pan"
+            maxLength={19}
+          />
           <Field label="Limit" value={limit} onChangeText={setLimit} keyboardType="decimal-pad" money testID="friend-limit" />
         </View>
       ) : (
