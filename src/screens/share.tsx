@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   addText: {
     fontSize: 28,
     lineHeight: 30,
-    color: colors.ink,
+    color: colors.cardInk,
   },
   message: {
     marginTop: 12,

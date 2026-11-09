@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   track: {
     height: 7,
     borderRadius: 6,
-    backgroundColor: "#30312D",
+    backgroundColor: colors.line,
     overflow: "hidden",
   },
   fill: {
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     marginTop: 18,
     minHeight: 120,
     borderRadius: 22,
-    backgroundColor: "#1B1F1C",
+    backgroundColor: "#EEF0F2",
     alignItems: "center",
     justifyContent: "center",
     padding: 18,
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: colors.trip,
+    backgroundColor: colors.blue,
     marginBottom: 8,
   },
   mapTitle: {

@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 13,
     fontWeight: "800",
-    color: colors.ink,
+    color: colors.cardInk,
   },
   stepCopy: {
     flex: 1,
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 13,
     lineHeight: 18,
-    color: colors.trip,
+    color: colors.blue,
     fontWeight: "600",
   },
   hero: {
@@ -171,10 +171,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 4,
   },
   miniBack: {
     top: 18,
@@ -202,13 +202,13 @@ const styles = StyleSheet.create({
   miniLabel: {
     fontSize: 12,
     fontWeight: "700",
-    color: "rgba(23,23,18,0.58)",
+    color: "rgba(245,245,247,0.62)",
   },
   miniNum: {
     marginTop: 28,
     fontSize: 18,
     fontWeight: "700",
-    color: colors.ink,
+    color: colors.cardInk,
     letterSpacing: 1,
   },
 });

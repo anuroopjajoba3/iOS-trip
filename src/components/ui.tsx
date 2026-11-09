@@ -17,23 +17,25 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export const colors = {
-  bg: "#111210",
-  white: "#F6F2E8",
-  gray: "#969A91",
-  cream: "#F4F0E6",
-  ink: "#171712",
-  line: "#30312D",
-  field: "#1B1C19",
-  trip: "#F4AD38",
-  visa: "#F4AD38",
-  mastercard: "#B9E8C9",
-  tripOff: "#3A3428",
-  visaOff: "#3A3428",
-  mastercardOff: "#2A3330",
-  tripShadow: "#70451F",
-  visaShadow: "#6F431C",
-  mastercardShadow: "#456B52",
-  buttonShadow: "#5C5C56",
+  bg: "#FFFFFF",
+  white: "#111111",
+  gray: "#8E8E93",
+  cream: "#F2F2F7",
+  ink: "#111111",
+  line: "#E5E5EA",
+  field: "#F2F2F7",
+  trip: "#1C1C1E",
+  visa: "#F2F2F7",
+  mastercard: "#E8E8ED",
+  tripOff: "#8E8E93",
+  visaOff: "#E5E5EA",
+  mastercardOff: "#D1D1D6",
+  tripShadow: "rgba(0,0,0,0.18)",
+  visaShadow: "rgba(0,0,0,0.06)",
+  mastercardShadow: "rgba(0,0,0,0.06)",
+  buttonShadow: "rgba(0,0,0,0.04)",
+  blue: "#007AFF",
+  cardInk: "#F5F5F7",
 };
 
 export const sampleCopy = "Sample only. No bank, issuer, or card is charged.";
@@ -99,11 +101,13 @@ export function Screen({
   pinned,
   children,
   footer,
+  flushFooter,
 }: {
   header?: ReactNode;
   pinned?: ReactNode;
   children?: ReactNode;
   footer?: ReactNode;
+  flushFooter?: boolean;
 }) {
   const insets = useSafeAreaInsets();
   const page = useSettle(520, 0);
@@ -132,7 +136,14 @@ export function Screen({
         {children}
       </ScrollView>
       {footer ? (
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+        <View
+          style={[
+            styles.footer,
+            flushFooter
+              ? styles.flushFooter
+              : { paddingBottom: Math.max(insets.bottom, 16) },
+          ]}
+        >
           {footer}
         </View>
       ) : (
@@ -161,6 +172,32 @@ export function Header({ right }: { right?: ReactNode }) {
     <View style={styles.header}>
       <BackButton />
       {right ?? <View style={styles.iconButton} />}
+    </View>
+  );
+}
+
+export function CloseHeader({
+  title,
+  onClose,
+  testID,
+}: {
+  title: string;
+  onClose: () => void;
+  testID?: string;
+}) {
+  return (
+    <View style={styles.navBar}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Close"
+        testID={testID}
+        onPress={onClose}
+        style={({ pressed }) => [styles.iconButton, pressed && styles.iconPressed]}
+      >
+        <Text style={styles.closeMark}>✕</Text>
+      </Pressable>
+      <Text style={styles.navTitle}>{title}</Text>
+      <View style={styles.iconButton} />
     </View>
   );
 }
@@ -271,7 +308,7 @@ export function Field({
           autoCorrect={false}
           autoCapitalize={keyboardType === "email-address" || money || secure ? "none" : "words"}
           placeholderTextColor={colors.gray}
-          selectionColor={colors.cream}
+          selectionColor={colors.blue}
           style={[styles.input, maxLength && maxLength > 10 ? styles.inputPan : null]}
           testID={testID}
           maxLength={maxLength}
@@ -337,14 +374,15 @@ export function Slab({
   status: string;
   active?: boolean;
 }) {
-  const ink = active ? colors.ink : "#E6E1D8";
-  const quiet = active ? "rgba(23,23,18,0.58)" : "#B7B2A8";
+  const onDark = tone === "trip";
+  const ink = onDark ? colors.cardInk : colors.ink;
+  const quiet = onDark ? "rgba(245,245,247,0.62)" : colors.gray;
   const fill = active ? slabFill[tone] : slabFillOff[tone];
   const ledge = active
     ? tone === "mastercard"
       ? colors.mastercardShadow
       : colors.tripShadow
-    : "#2A2A26";
+    : "rgba(0,0,0,0.06)";
   return (
     <View
       style={[styles.slab, { backgroundColor: fill, shadowColor: ledge }]}
@@ -453,12 +491,38 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     backgroundColor: colors.bg,
   },
+  flushFooter: {
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
+    backgroundColor: colors.bg,
+  },
   header: {
     minHeight: 44,
     paddingHorizontal: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  navBar: {
+    minHeight: 44,
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  navTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "600",
+    color: colors.ink,
+  },
+  closeMark: {
+    fontSize: 15,
+    lineHeight: 18,
+    fontWeight: "500",
+    color: colors.ink,
   },
   iconButton: {
     minWidth: 44,
@@ -487,12 +551,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 99,
-    backgroundColor: colors.trip,
-    shadowColor: colors.visaShadow,
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 5,
+    backgroundColor: colors.cream,
   },
   datePillText: {
     color: colors.ink,
@@ -517,17 +576,12 @@ const styles = StyleSheet.create({
   },
   button: {
     minHeight: 52,
-    borderRadius: 16,
+    borderRadius: 999,
     backgroundColor: colors.cream,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 20,
     paddingVertical: 14,
-    shadowColor: colors.buttonShadow,
-    shadowOffset: { width: 0, height: 7 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 7,
   },
   pressed: {
     transform: [{ translateY: 2 }, { scale: 0.985 }],
@@ -616,14 +670,14 @@ const styles = StyleSheet.create({
   },
   slab: {
     minHeight: 124,
-    borderRadius: 21,
+    borderRadius: 22,
     paddingHorizontal: 18,
     paddingTop: 16,
     paddingBottom: 18,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 4,
   },
   slabTop: {
     flexDirection: "row",
@@ -682,9 +736,9 @@ const styles = StyleSheet.create({
   kindText: {
     fontSize: 16,
     fontWeight: "600",
-    color: colors.white,
+    color: colors.ink,
   },
   kindTextOn: {
-    color: colors.ink,
+    color: colors.cardInk,
   },
 });

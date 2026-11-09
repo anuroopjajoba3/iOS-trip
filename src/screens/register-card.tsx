@@ -1,14 +1,16 @@
 import { router } from "expo-router";
+import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { CardCarousel } from "@/components/card-home";
 import { HowSteps, StepHint } from "@/components/explain";
-import { formatPan } from "@/ledger";
-import { CardArrive, colors, Muted, PrimaryButton, sampleCopy, Screen, Slab, Title, WalletButton } from "@/components/ui";
+import { colors, CardArrive, Muted, PrimaryButton, sampleCopy, Screen, Title, WalletButton } from "@/components/ui";
 import { useTrip } from "@/store";
 
 export function RegisterCardScreen() {
   const { user, acceptTripCard, addToWallet, logOut } = useTrip();
   const tripCard = user?.tripCard;
+  const [revealed, setRevealed] = useState(false);
 
   function continueOn() {
     acceptTripCard();
@@ -36,14 +38,10 @@ export function RegisterCardScreen() {
     >
       {tripCard ? (
         <CardArrive>
-          <Slab
-            tone="trip"
-            label={tripCard.name}
-            title={formatPan(tripCard.pan)}
-            detail={`exp ${tripCard.exp} · cvv ${tripCard.cvv}`}
-            amount={tripCard.inWallet ? "Apple Wallet" : "Virtual"}
-            status={tripCard.inWallet ? "Wallet" : "Ready"}
-            active={tripCard.active}
+          <CardCarousel
+            card={tripCard}
+            revealed={revealed}
+            onToggleDetails={() => setRevealed((value) => !value)}
           />
         </CardArrive>
       ) : null}

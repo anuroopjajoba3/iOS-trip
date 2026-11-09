@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   plusMark: {
     fontSize: 28,
     lineHeight: 30,
-    color: colors.ink,
+    color: colors.cardInk,
   },
   full: {
     marginTop: 12,
