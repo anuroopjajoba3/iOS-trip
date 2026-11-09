@@ -44,7 +44,7 @@ export function TripsScreen() {
     >
       {!trip ? (
         <View>
-          <Text style={styles.body}>Your virtual trip card is ready. Start a trip and put real cards under it. Spend splits equally.</Text>
+          <Text style={styles.body}>Your trip card is ready. Start a trip, add friends, and every spend splits equally.</Text>
         </View>
       ) : (
         <View>

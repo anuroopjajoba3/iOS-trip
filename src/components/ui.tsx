@@ -37,8 +37,8 @@ export const colors = {
 };
 
 export const sampleCopy = "Sample only. No bank, issuer, or card is charged.";
-export const authCopy = "The shop charges one trip card. Under it, every person's card pays an equal share.";
-export const waitingCopy = "The trip card takes the full amount, then each person's card is charged equally.";
+export const authCopy = "The shop charges the trip card. Then each person pays the same share.";
+export const waitingCopy = "Charging the trip card, then splitting the amount equally.";
 
 const slabFill = {
   trip: colors.trip,
@@ -288,11 +288,23 @@ export function WalletButton({
   added: boolean;
   onPress: () => void;
 }) {
+  const pop = useRef(new Animated.Value(added ? 1 : 0.92)).current;
+  useEffect(() => {
+    Animated.spring(pop, {
+      toValue: 1,
+      friction: 6,
+      tension: 80,
+      useNativeDriver: true,
+    }).start();
+  }, [added, pop]);
+
   if (added) {
     return (
-      <View style={styles.walletAdded} testID="wallet-added">
-        <Text style={styles.walletAddedText}>In Apple Wallet</Text>
-      </View>
+      <Animated.View style={{ transform: [{ scale: pop }] }}>
+        <View style={styles.walletAdded} testID="wallet-added">
+          <Text style={styles.walletAddedText}>In Apple Wallet</Text>
+        </View>
+      </Animated.View>
     );
   }
   return (

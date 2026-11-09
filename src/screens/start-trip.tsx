@@ -12,6 +12,7 @@ import {
   type CardKind,
   type TripFriend,
 } from "@/ledger";
+import { StepHint } from "@/components/explain";
 import { colors, Field, Header, KindToggle, Muted, PrimaryButton, Screen, Slab, Title } from "@/components/ui";
 import { FaceRow } from "@/components/trip-extras";
 import { useTrip } from "@/store";
@@ -104,7 +105,8 @@ export function StartTripScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Start a trip</Title>
-          <Muted>The virtual trip card is already issued. Put your real card under it, then add friends with +.</Muted>
+          <StepHint>Step 3 of 3 · Put real cards under the trip card</StepHint>
+          <Muted>Name the trip. Add your card. Tap + for friends. Spend splits equally.</Muted>
         </View>
       }
       footer={<PrimaryButton label="Open trip" testID="open-trip" onPress={save} />}

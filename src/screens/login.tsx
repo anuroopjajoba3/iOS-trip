@@ -26,6 +26,7 @@ export function LogInScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Log in</Title>
+          <Text style={styles.lede}>Welcome back. Your trip card is waiting.</Text>
         </View>
       }
       footer={<PrimaryButton label="Log in" testID="log-in" onPress={submit} />}
@@ -46,6 +47,12 @@ const styles = StyleSheet.create({
   pad: {
     paddingHorizontal: 22,
     paddingBottom: 8,
+  },
+  lede: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 18,
+    color: colors.gray,
   },
   message: {
     marginTop: 14,

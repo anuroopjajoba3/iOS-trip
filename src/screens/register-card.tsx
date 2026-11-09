@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { HowSteps, StepHint } from "@/components/explain";
 import { formatPan } from "@/ledger";
 import { CardArrive, colors, Muted, PrimaryButton, sampleCopy, Screen, Slab, Title, WalletButton } from "@/components/ui";
 import { useTrip } from "@/store";
@@ -27,7 +28,8 @@ export function RegisterCardScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Your trip card</Title>
-          <Muted>Trip Wallet issued this 16-digit virtual card. Add it to Apple Wallet, then pay with Apple Pay.</Muted>
+          <StepHint>Step 2 of 3 · This is the card shops charge</StepHint>
+          <Muted>Add it to Apple Wallet. Friends put real cards under it later.</Muted>
         </View>
       }
       footer={<PrimaryButton label="Continue" testID="continue-trip-card" onPress={continueOn} />}
@@ -46,9 +48,8 @@ export function RegisterCardScreen() {
         </CardArrive>
       ) : null}
       {tripCard ? <WalletButton added={tripCard.inWallet} onPress={addToWallet} /> : null}
-      <Text style={styles.copy}>
-        A live card needs a bank BIN, a card issuer, and Apple in-app provisioning. This phone records the card and the Wallet add. {sampleCopy}
-      </Text>
+      <HowSteps compact />
+      <Text style={styles.copy}>{sampleCopy}</Text>
     </Screen>
   );
 }

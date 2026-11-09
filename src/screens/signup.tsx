@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
+import { StepHint } from "@/components/explain";
 import { colors, Field, Header, PrimaryButton, Screen, Title } from "@/components/ui";
 import { useTrip } from "@/store";
 
@@ -27,6 +28,7 @@ export function SignUpScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Sign up</Title>
+          <StepHint>Step 1 of 3 · Make your account</StepHint>
         </View>
       }
       footer={<PrimaryButton label="Create account" testID="create-account" onPress={submit} />}

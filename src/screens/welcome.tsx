@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { colors, Muted, PrimaryButton, Screen, Title } from "@/components/ui";
+import { HeroStack, HowSteps } from "@/components/explain";
+import { colors, PrimaryButton, Screen, Title } from "@/components/ui";
 
 export function WelcomeScreen() {
   return (
@@ -9,14 +10,15 @@ export function WelcomeScreen() {
       pinned={
         <View style={styles.pad}>
           <Title>Trip Wallet</Title>
-          <Muted>Sign up. Trip Wallet gives you a virtual trip card.</Muted>
+          <Text style={styles.lede}>One card for the trip. Everyone pays their share.</Text>
         </View>
       }
       footer={
         <PrimaryButton label="Sign up" testID="sign-up" onPress={() => router.push("/signup")} />
       }
     >
-      <Text style={styles.body}>Trip Wallet issues a virtual trip card. Shops charge that one number. Under it, you plus up to five friends each keep a real credit or debit card. Every spend splits equally, so nobody pays for the group and waits to be paid back.</Text>
+      <HeroStack />
+      <HowSteps />
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Log in"
@@ -33,11 +35,12 @@ export function WelcomeScreen() {
 const styles = StyleSheet.create({
   pad: {
     paddingHorizontal: 22,
-    paddingBottom: 12,
+    paddingBottom: 4,
   },
-  body: {
-    fontSize: 14,
-    lineHeight: 20,
+  lede: {
+    marginTop: 8,
+    fontSize: 16,
+    lineHeight: 22,
     color: colors.gray,
   },
   login: {

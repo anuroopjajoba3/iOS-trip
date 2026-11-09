@@ -13,7 +13,7 @@ export function ChargeCardScreen({ trip, draft }: { trip: Trip; draft: Draft }) 
       pinned={
         <View style={styles.pad}>
           <Title>{draft.merchant}</Title>
-          <Text style={styles.support}>One trip card. Equal split under it.</Text>
+          <Text style={styles.support}>Shop charges this card. Everyone pays the same.</Text>
         </View>
       }
       footer={

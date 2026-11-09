@@ -42,7 +42,7 @@ export function CapsScreen({ trip }: { trip: Trip }) {
       pinned={
         <View style={styles.pad}>
           <Title>New charge</Title>
-          <Muted>{`Split equally across ${trip.people.length} card${trip.people.length === 1 ? "" : "s"}`}</Muted>
+          <Muted>{`The trip card takes the full amount. Then it splits equally across ${trip.people.length} people.`}</Muted>
         </View>
       }
       footer={<PrimaryButton label="Continue" onPress={save} testID="save-caps" />}

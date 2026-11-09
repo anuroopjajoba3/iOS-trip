@@ -88,6 +88,7 @@ export function ResultScreen({ trip, draft }: { trip: Trip; draft: Draft }) {
           <Text style={styles.merchant}>{draft.merchant}</Text>
           <Text style={styles.amount}>{formatDollars(draft.cartCents)} charged</Text>
           <Text style={styles.copy}>{authCopy}</Text>
+          <Text style={styles.copy}>Nobody needs to pay anyone back.</Text>
           <Text style={styles.section}>Collections</Text>
             {outcome.collections.map((line) => (
             <View key={line.personId} style={styles.collection}>
